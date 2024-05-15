@@ -1,16 +1,24 @@
 #!/bin/bash
 
-# Verifica se está rodando como root
-if [[ $EUID -ne 0 ]]; then
-   echo "Este script deve ser executado como root" 
-   exit 1
-fi
-
 # Função para mostrar a mensagem de uso
 show_usage() {
     echo -e     "Uso: \n\n      curl -sSL https://get.ticke.tz | sudo sh -- $0 <backend_host> <frontend_host> <email>\n\n"
     echo -e "Exemplo: \n\n      curl -sSL https://get.ticke.tz | sudo sh -- api.ticketz.exemplo.com.br ticketz.exemplo.com.br email@exemplo.com.br\n\n"
 }
+
+# Verifica se está rodando usando o bash
+
+if ! [ -n "$BASH_VERSION" ]; then
+   echo "Este script deve ser executado como utilizando o bash\n\n" 
+   show_usage
+   exit 1
+fi
+
+# Verifica se está rodando como root
+if [[ $EUID -ne 0 ]]; then
+   echo "Este script deve ser executado como root" 
+   exit 1
+fi
 
 # Verifica se os parâmetros estão corretos
 if [ -z "$3" ]; then
