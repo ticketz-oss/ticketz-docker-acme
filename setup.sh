@@ -8,8 +8,8 @@ fi
 
 # Função para mostrar a mensagem de uso
 show_usage() {
-    echo -e     "Uso: \n\n      $0 <backend_host> <frontend_host> <email>\n\n"
-    echo -e "Exemplo: \n\n      $0 api.ticketz.exemplo.com.br ticketz.exemplo.com.br email@exemplo.com.br\n\n"
+    echo -e     "Uso: \n\n      curl -sSL https://get.ticke.tz | sudo sh -- $0 <backend_host> <frontend_host> <email>\n\n"
+    echo -e "Exemplo: \n\n      curl -sSL https://get.ticke.tz | sudo sh -- api.ticketz.exemplo.com.br ticketz.exemplo.com.br email@exemplo.com.br\n\n"
 }
 
 # Verifica se os parâmetros estão corretos
