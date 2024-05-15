@@ -40,13 +40,15 @@ git clone https://github.com/ticketz-oss/ticketz-docker-acme.git
 cd ticketz-docker-acme
 
 # Passo 4: Configura os hostnames
-sed -e "s/^BACKEND_HOST=.*/BACKEND_HOST=$backend_host/g"  \
+cat example.env-backend \
+  | sed -e "s/^BACKEND_HOST=.*/BACKEND_HOST=$backend_host/g"  \
   | sed -e "s/^FRONTEND_HOST=.*/FRONTEND_HOST=$frontend_host/g" \
-  | sed -e "s/^EMAIL_ADDRESS=.*/EMAIL_ADDRESS=$email/g" < example.env-backend > .env-backend
+  | sed -e "s/^EMAIL_ADDRESS=.*/EMAIL_ADDRESS=$email/g"  > .env-backend
 
-sed -e "s/^BACKEND_HOST=.*/BACKEND_HOST=$backend_host/g" \
+cat example.env-frontend \
+  | sed -e "s/^BACKEND_HOST=.*/BACKEND_HOST=$backend_host/g" \
   | sed -e "s/^FRONTEND_HOST=.*/FRONTEND_HOST=$frontend_host/g" \
-  | sed -e "s/^EMAIL_ADDRESS=.*/EMAIL_ADDRESS=$email/g" < example.env-frontend > .env-frontend
+  | sed -e "s/^EMAIL_ADDRESS=.*/EMAIL_ADDRESS=$email/g" > .env-frontend
 
 # Passo 5: Sobe os containers
 docker compose up -d
