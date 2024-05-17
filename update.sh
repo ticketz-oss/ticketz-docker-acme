@@ -18,7 +18,12 @@ if [[ $EUID -ne 0 ]]; then
    exit 1
 fi
 
-cd /home/${SUDO_USER}/ticketz-docker-acme || exit 1
+if [ "${SUDO_USER}" = "root" ] ; then
+  cd /root/ticketz-docker-acme || exit 1
+else
+  cd /home/${SUDO_USER}/ticketz-docker-acme || exit 1
+fi
+
 echo "Baixando serviços"
 sudo docker compose down || exit 1
 
