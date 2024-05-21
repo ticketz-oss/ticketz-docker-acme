@@ -18,17 +18,28 @@ if [[ $EUID -ne 0 ]]; then
    exit 1
 fi
 
-if [ "${SUDO_USER}" = "root" ] ; then
+if [ -d ticketz-docker-acme ] && [ -f ticketz-docker-acme/docker-compose.yaml ] ; then
+  cd ticketz-docker-acme
+elif [ -f docker-compose.yaml ] ; then
+  ## nothing to do, already here
+elif [ "${SUDO_USER}" = "root" ] ; then
   cd /root/ticketz-docker-acme || exit 1
 else
   cd /home/${SUDO_USER}/ticketz-docker-acme || exit 1
 fi
 
-echo "Baixando serviços"
+echo "Working on $PWD/ticketz-docker-acme folder"
+
+if ! [ -f docker-compose.yaml ] ; then
+  echo "docker-compose.yaml didn't found" > /dev/stderr
+  exit 1
+fi
+
+echo "Finalizando serviços"
 sudo docker compose down || exit 1
 
-echo "Removendo imagens Docker"
-sudo docker image prune -a -f || exit 1
+echo "Baixando novas imagens"
+sudo docker compose pull || exit 1
 
 echo "Baixando novas imagens e Inicializando serviços"
 sudo docker compose up -d
