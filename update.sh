@@ -22,6 +22,7 @@ if [ -d ticketz-docker-acme ] && [ -f ticketz-docker-acme/docker-compose.yaml ] 
   cd ticketz-docker-acme
 elif [ -f docker-compose.yaml ] ; then
   ## nothing to do, already here
+  echo -n "" > /dev/null
 elif [ "${SUDO_USER}" = "root" ] ; then
   cd /root/ticketz-docker-acme || exit 1
 else
