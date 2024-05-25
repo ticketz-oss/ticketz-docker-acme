@@ -3,6 +3,7 @@ version: '3'
 networks:
   ticketz:
   nginx-proxy:
+  wordpress:
 
 volumes:
   ngx_conf:
@@ -15,6 +16,8 @@ volumes:
   postgres_data:
   backend_public:
   backend_private:
+  wordpress_html:
+  mysql_db:
     
 services:
 
@@ -107,3 +110,34 @@ services:
       - redis_data:/data
     networks:
       - ticketz
+
+  wordpress:
+    image: wordpress
+    restart: always
+    environment:
+      WORDPRESS_DB_HOST: mysqldb
+      WORDPRESS_DB_USER: exampleuser
+      WORDPRESS_DB_PASSWORD: examplepass
+      WORDPRESS_DB_NAME: exampledb
+      VIRTUAL_HOST: site.exemplo.com.br
+      VIRTUAL_PORT: 80
+      LETSENCRYPT_HOST: site.exemplo.com.br
+      LETSENCRYPT_EMAIL: email@exemplo.com.br
+    volumes:
+      - wordpress:/var/www/html
+    networks:
+      - wordpress
+      - nginx-proxy
+
+  mysqldb:
+    image: mysql:8.0
+    restart: always
+    environment:
+      MYSQL_DATABASE: exampledb
+      MYSQL_USER: exampleuser
+      MYSQL_PASSWORD: examplepass
+      MYSQL_RANDOM_ROOT_PASSWORD: '1'
+    volumes:
+      - db:/var/lib/mysql
+    network:
+      - wordpress
