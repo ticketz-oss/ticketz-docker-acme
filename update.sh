@@ -36,11 +36,18 @@ if ! [ -f docker-compose.yaml ] ; then
   exit 1
 fi
 
-echo "Finalizando serviços"
-sudo docker compose down || exit 1
-
 echo "Baixando novas imagens"
 sudo docker compose pull || exit 1
 
-echo "Baixando novas imagens e Inicializando serviços"
+echo "Finalizando serviços"
+sudo docker compose down || exit 1
+
+echo "Reinicializando serviços"
 sudo docker compose up -d
+
+echo -e "\nSeu sistema já deve estar funcionando"
+
+echo "Removendo imagens anteriores..."
+sudo docker system prune -af &> /dev/null
+
+echo "Concluído"
