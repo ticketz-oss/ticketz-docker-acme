@@ -6,6 +6,13 @@ show_usage() {
     echo -e "Exemplo: \n\n      curl -sSL https://update.ticke.tz | sudo bash\n\n"
 }
 
+# Função para sair com erro
+show_error() {
+    echo $1
+    echo -e "\n\nAlterações precisam ser verificadas manualmente, procure suporte se necessário\n\n"
+    exit 1
+}
+
 if ! [ -n "$BASH_VERSION" ]; then
    echo "Este script deve ser executado como utilizando o bash\n\n" 
    show_usage
@@ -37,17 +44,17 @@ if ! [ -f docker-compose.yaml ] ; then
 fi
 
 echo "Baixando novas imagens"
-sudo docker compose pull || exit 1
+docker compose pull || show_error "Erro ao baixar novas imagens"
 
-echo "Finalizando serviços"
-sudo docker compose down || exit 1
+echo "Finalizando containers"
+docker compose down || show_error "Erro ao finalizar containers"
 
-echo "Reinicializando serviços"
-sudo docker compose up -d
+echo "Inicializando containers"
+docker compose up -d || show_error "Erro ao iniciar containers"
 
 echo -e "\nSeu sistema já deve estar funcionando"
 
 echo "Removendo imagens anteriores..."
-sudo docker system prune -af &> /dev/null
+docker system prune -af &> /dev/null
 
 echo "Concluído"
