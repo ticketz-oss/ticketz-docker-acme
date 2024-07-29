@@ -72,6 +72,8 @@ services:
 
   frontend:
     image: ghcr.io/ticketz-oss/ticketz-frontend:latest
+    volumes:
+      - backend_public:/var/www/backend-public
     env_file:
       - .env-frontend
     restart: always
@@ -107,3 +109,10 @@ services:
       - redis_data:/data
     networks:
       - ticketz
+
+  watchtower:
+    image: containrrr/watchtower
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /root/.docker/config.json:/config.json
+    command: --interval 1800
