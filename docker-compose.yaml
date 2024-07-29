@@ -107,3 +107,11 @@ services:
       - redis_data:/data
     networks:
       - ticketz
+
+  watchtower:
+    image: containrrr/watchtower
+    profiles: ["do-not-start"]
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    command: --interval 1800 --cleanup
+    restart: unless-stopped
