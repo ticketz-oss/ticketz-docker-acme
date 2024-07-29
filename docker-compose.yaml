@@ -1,5 +1,3 @@
-version: '3'
-
 networks:
   ticketz:
   nginx-proxy:
@@ -109,9 +107,3 @@ services:
       - redis_data:/data
     networks:
       - ticketz
-
-  watchtower:
-    image: containrrr/watchtower
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-    command: --interval 1800 --cleanup
