@@ -13,6 +13,13 @@ show_error() {
     exit 1
 }
 
+# Função para mensagem em vermelho
+echored() {
+   echo -ne "\033[41m\033[37m\033[1m"
+   echo -n "$1"
+   echo -e "\033[0m"
+}
+
 if ! [ -n "$BASH_VERSION" ]; then
    echo "Este script deve ser executado como utilizando o bash\n\n" 
    show_usage
@@ -23,6 +30,43 @@ fi
 if [[ $EUID -ne 0 ]]; then
    echo "Este script deve ser executado como root" 
    exit 1
+fi
+
+CURBASE=$(basename ${PWD})
+BACKEND_VOL=$(docker volume list -q | grep -e "^${CURBASE}_backend_public$")
+POSTGRES_VOL=$(docker volume list -q | grep -e "^${CURBASE}_postgres_data")
+
+if [ -f docker-compose-acme.yaml ] && [ -f .env-backend-acme ] && [ -n "${BACKEND_VOL}" ] && [ -n "${POSTGRES_VOL}" ]; then
+   echored "                                               "
+   echored "  Este processo irá converter uma instalação   "
+   echored "  manual a partir do fonte por uma instalação  "
+   echored "  a partir de imagens pré compiladas do        "
+   echored "  projeto ticketz                              "
+   echored "                                               "
+   echored "  Aguarde 20 segundos.                         "
+   echored "                                               "
+   echored "  Aperte CTRL-C para cancelar                  "
+   echored "                                               "
+   sleep 20
+   echo "Prosseguindo..."
+
+   docker compose -f docker-compose-acme.yaml down
+
+   docker volume create --name ticketz-docker-acme_backend_public || exit 1
+   docker run --rm -v ${BACKEND_VOL}:/from -v ticketz-docker-acme_backend_public:/to alpine ash -c "cd /from ; cp -a . /to"
+
+   docker volume create --name ticketz-docker-acme_postgres_data || exit 1
+   docker run --rm -v ${POSTGRES_VOL}:/from -v ticketz-docker-acme_postgres_data:/to alpine ash -c "cd /from ; cp -a . /to"
+   
+   . .env-backend-acme
+   
+   cd
+   curl -sSL get.ticke.tz | bash -s ${FRONTEND_HOST} ${EMAIL_ADDRESS}
+
+   echo "Após os testes você pode remover os volumes antigos com o comando:"
+   echo -e "\n\n    sudo docker volume rm ${BACKEND_VOL} ${POSTGRES_VOL}\n"
+   
+   exit 0
 fi
 
 if [ -d ticketz-docker-acme ] && [ -f ticketz-docker-acme/docker-compose.yaml ] ; then
@@ -39,7 +83,7 @@ fi
 echo "Working on $PWD/ticketz-docker-acme folder"
 
 if ! [ -f docker-compose.yaml ] ; then
-  echo "docker-compose.yaml didn't found" > /dev/stderr
+  echo "docker-compose.yaml não encontrado" > /dev/stderr
   exit 1
 fi
 
