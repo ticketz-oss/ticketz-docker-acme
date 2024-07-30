@@ -60,7 +60,13 @@ if [ -f docker-compose-acme.yaml ] && [ -f .env-backend-acme ] && [ -n "${BACKEN
    
    . .env-backend-acme
    
-   cd
+   if [ -z "${SUDO_USER}" ] ; then
+     cd
+   elif [ "${SUDO_USER}" = "root" ] ; then
+     cd /root || exit 1
+   else
+     cd /home/${SUDO_USER} || exit 1
+   fi
    curl -sSL get.ticke.tz | bash -s ${FRONTEND_HOST} ${EMAIL_ADDRESS}
 
    echo "Após os testes você pode remover os volumes antigos com o comando:"
