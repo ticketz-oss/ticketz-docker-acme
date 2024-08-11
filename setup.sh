@@ -2,7 +2,7 @@
 
 # Função para mostrar a mensagem de uso
 show_usage() {
-    echo -e     "Uso: \n\n      curl -sSL https://get.ticke.tz | sudo bash -s <frontend_host> <email>\n\n"
+    echo -e     "Uso: \n\n      curl -sSL https://get.ticke.tz | sudo bash -s [-b <branchname>] <frontend_host> <email>\n\n"
     echo -e "Exemplo: \n\n      curl -sSL https://get.ticke.tz | sudo bash -s ticketz.exemplo.com.br email@exemplo.com.br\n\n"
 }
 
@@ -12,6 +12,13 @@ if ! [ -n "$BASH_VERSION" ]; then
    echo "Este script deve ser executado como utilizando o bash\n\n" 
    show_usage
    exit 1
+fi
+
+# testa se pediu branch
+if [ "$1" = "-b" ] ; then
+   BRANCH=$2
+   shift
+   shift
 fi
 
 # Verifica se está rodando como root
@@ -63,10 +70,12 @@ if ! git diff-index --quiet HEAD -- ; then
     echo -e "\n\nAlterações precisam ser verificadas manualmente, procure suporte se necessário\n\n"
     exit 1
   fi
-  if ! git stash pop &> stash-pop.log; then
-    echo "Falha ao recuperar alterações salvas, verifique arquivo stash-pop.log"
-    echo -e "\n\nAlterações precisam ser verificadas manualmente, procure suporte se necessário\n\n"
-    exit 1
+  
+  if [ -n "${BRANCH}" ] ; then
+    echo "Alterando para a branch ${BRANCH}"
+    if ! git checkout $BRANCH; then
+      echo "Erro ao alternar para a branch ${BRANCH}"
+    fi
   fi
 fi
 
