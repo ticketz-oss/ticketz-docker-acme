@@ -68,18 +68,21 @@ if ! git diff-index --quiet HEAD -- ; then
 fi
 
 echo "Atualizando repositório"
+git fetch
+
+if [ -n "${BRANCH}" ] ; then
+  echo "Alterando para a branch ${BRANCH}"
+  if ! git checkout --track origin/$BRANCH; then
+    echo "Erro ao alternar para a branch ${BRANCH}"
+    exit 1
+  fi
+fi
+
+echo "Atualizando área de trabalho"
 if ! git pull &> pull.log; then
   echo "Falha ao Atualizar repositório, verifique arquivo pull.log"
   echo -e "\n\nAlterações precisam ser verificadas manualmente, procure suporte se necessário\n\n"
   exit 1
-fi
-
-if [ -n "${BRANCH}" ] ; then
-  echo "Alterando para a branch ${BRANCH}"
-  if ! git checkout $BRANCH; then
-    echo "Erro ao alternar para a branch ${BRANCH}"
-    exit 1
-  fi
 fi
 
 # Passo 4: Configura os hostnames
