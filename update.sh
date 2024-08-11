@@ -32,7 +32,7 @@ if [[ $EUID -ne 0 ]]; then
    exit 1
 fi
 
-if [ -n $1 ]
+if [ -n $1 ]; then
   BRANCH=$1
 fi
 
