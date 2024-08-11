@@ -72,9 +72,13 @@ git fetch
 
 if [ -n "${BRANCH}" ] ; then
   echo "Alterando para a branch ${BRANCH}"
-  if ! git checkout --track origin/$BRANCH; then
-    echo "Erro ao alternar para a branch ${BRANCH}"
-    exit 1
+  if git rev-parse --verify ${BRANCH}; then
+    git checkout ${BRANCH}
+  else
+    if ! git checkout --track origin/$BRANCH; then
+      echo "Erro ao alternar para a branch ${BRANCH}"
+      exit 1
+    fi
   fi
 fi
 
