@@ -63,19 +63,22 @@ which docker > /dev/null || curl -sSL https://get.docker.com | sh
 [ -d ticketz-docker-acme ] || git clone https://github.com/ticketz-oss/ticketz-docker-acme.git
 cd ticketz-docker-acme
 if ! git diff-index --quiet HEAD -- ; then
+  echo "Salvando alterações locais com git stash push"
   git stash push &> /dev/null
-  echo "Atualizando repositório"
-  if ! git pull &> pull.log; then
-    echo "Falha ao Atualizar repositório, verifique arquivo pull.log"
-    echo -e "\n\nAlterações precisam ser verificadas manualmente, procure suporte se necessário\n\n"
+fi
+
+echo "Atualizando repositório"
+if ! git pull &> pull.log; then
+  echo "Falha ao Atualizar repositório, verifique arquivo pull.log"
+  echo -e "\n\nAlterações precisam ser verificadas manualmente, procure suporte se necessário\n\n"
+  exit 1
+fi
+
+if [ -n "${BRANCH}" ] ; then
+  echo "Alterando para a branch ${BRANCH}"
+  if ! git checkout $BRANCH; then
+    echo "Erro ao alternar para a branch ${BRANCH}"
     exit 1
-  fi
-  
-  if [ -n "${BRANCH}" ] ; then
-    echo "Alterando para a branch ${BRANCH}"
-    if ! git checkout $BRANCH; then
-      echo "Erro ao alternar para a branch ${BRANCH}"
-    fi
   fi
 fi
 
