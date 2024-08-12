@@ -32,7 +32,7 @@ if [[ $EUID -ne 0 ]]; then
    exit 1
 fi
 
-if [ -n $1 ]; then
+if [ -n "$1" ]; then
   BRANCH=$1
 fi
 
@@ -95,7 +95,7 @@ if ! [ -f docker-compose.yaml ] ; then
   exit 1
 fi
 
-if [ -n ${BRANCH} ] ; then
+if [ -n "${BRANCH}" ] ; then
   if ! git diff-index --quiet HEAD -- ; then
     echo "Salvando alterações locais com git stash push"
     git stash push &> /dev/null
