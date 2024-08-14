@@ -41,7 +41,7 @@ BACKEND_PUBLIC_VOL=$(docker volume list -q | grep -e "^${CURBASE}_backend_public
 BACKEND_PRIVATE_VOL=$(docker volume list -q | grep -e "^${CURBASE}_backend_private$")
 POSTGRES_VOL=$(docker volume list -q | grep -e "^${CURBASE}_postgres_data")
 
-if [ -f docker-compose-acme.yaml ] && [ -f .env-backend-acme ] && [ -n "${BACKEND_VOL}" ] && [ -n "${POSTGRES_VOL}" ]; then
+if [ -f docker-compose-acme.yaml ] && [ -f .env-backend-acme ] && [ -n "${BACKEND_PUBLIC_VOL}" ] && [ -n "${BACKEND_PRIVATE_VOL}" ] && [ -n "${POSTGRES_VOL}" ]; then
    echored "                                               "
    echored "  Este processo irá converter uma instalação   "
    echored "  manual a partir do fonte por uma instalação  "
