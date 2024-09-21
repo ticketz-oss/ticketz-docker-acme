@@ -32,12 +32,16 @@ if [[ $EUID -ne 0 ]]; then
    exit 1
 fi
 
+if [ -n "$1" ]; then
+  BRANCH=$1
+fi
+
 CURBASE=$(basename ${PWD})
 BACKEND_PUBLIC_VOL=$(docker volume list -q | grep -e "^${CURBASE}_backend_public$")
 BACKEND_PRIVATE_VOL=$(docker volume list -q | grep -e "^${CURBASE}_backend_private$")
 POSTGRES_VOL=$(docker volume list -q | grep -e "^${CURBASE}_postgres_data")
 
-if [ -f docker-compose-acme.yaml ] && [ -f .env-backend-acme ] && [ -n "${BACKEND_VOL}" ] && [ -n "${POSTGRES_VOL}" ]; then
+if [ -f docker-compose-acme.yaml ] && [ -f .env-backend-acme ] && [ -n "${BACKEND_PUBLIC_VOL}" ] && [ -n "${BACKEND_PRIVATE_VOL}" ] && [ -n "${POSTGRES_VOL}" ]; then
    echored "                                               "
    echored "  Este processo irá converter uma instalação   "
    echored "  manual a partir do fonte por uma instalação  "
@@ -64,8 +68,14 @@ if [ -f docker-compose-acme.yaml ] && [ -f .env-backend-acme ] && [ -n "${BACKEN
    
    . .env-backend-acme
    
-   cd
-   curl -sSL get.ticke.tz | bash -s ${FRONTEND_HOST} ${EMAIL_ADDRESS}
+   if [ -z "${SUDO_USER}" ] ; then
+     cd
+   elif [ "${SUDO_USER}" = "root" ] ; then
+     cd /root || exit 1
+   else
+     cd /home/${SUDO_USER} || exit 1
+   fi
+   curl -sSL get.ticke.tz | bash -s -- -b ${BRANCH-main} ${FRONTEND_HOST} ${EMAIL_ADDRESS}
 
    echo "Após os testes você pode remover os volumes antigos com o comando:"
    echo -e "\n\n    sudo docker volume rm ${BACKEND_PUBLIC_VOL} ${BACKEND_PRIVATE_VOL} ${POSTGRES_VOL}\n"
@@ -90,6 +100,27 @@ if ! [ -f docker-compose.yaml ] ; then
   echo "docker-compose.yaml não encontrado" > /dev/stderr
   exit 1
 fi
+
+if [ -n "${BRANCH}" ] ; then
+  if ! git diff-index --quiet HEAD -- ; then
+    echo "Salvando alterações locais com git stash push"
+    git stash push &> /dev/null
+  fi
+
+  echo "Atualizando repositório"
+  git fetch
+
+  echo "Alterando para a branch ${BRANCH}"
+  if git rev-parse --verify ${BRANCH}; then
+    git checkout ${BRANCH}
+  else
+    if ! git checkout --track origin/$BRANCH; then
+      echo "Erro ao alternar para a branch ${BRANCH}"
+      exit 1
+    fi
+  fi
+fi
+
 
 echo "Baixando novas imagens"
 docker compose pull || show_error "Erro ao baixar novas imagens"
