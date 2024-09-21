@@ -119,6 +119,8 @@ if [ -n "${BRANCH}" ] ; then
       exit 1
     fi
   fi
+  echo "Trazendo updates da branch ${BRANCH}"
+  git pull &> /dev/null
 fi
 
 
