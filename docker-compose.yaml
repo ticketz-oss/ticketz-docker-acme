@@ -115,3 +115,18 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
     command: --interval 1800 --cleanup
     restart: unless-stopped
+
+  sidekick:
+    image: ghcr.io/ticketz-oss/ticketz-sidekick:latest
+    profiles: ["do-not-start"]
+    env_file:
+      - .env-backend
+    restart: unless-stopped
+    volumes:
+      - backend_public:/backend-public
+      - backend_private:/backend-private
+      - ./backups:/backups
+    depends_on:
+      - postgres
+    networks:
+      - ticketz
