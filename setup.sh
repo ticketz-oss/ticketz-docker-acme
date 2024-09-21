@@ -117,7 +117,7 @@ EOF
 
 latest_backup_file=$(ls -t ${CURFOLDER}/ticketz-backup-*.tar.gz 2>/dev/null | head -n 1)
 
-if [ -z "${latest_backup_file}" ] && ![ -d "backups" ]; then
+if [ -n "${latest_backup_file}" ] && ![ -d "backups" ]; then
     echo "Backup encontrado. Preparando para restauração..."
 
     mkdir backups
