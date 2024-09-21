@@ -122,8 +122,8 @@ if [ -z "${latest_backup_file}" ] && ![ -d "backups" ]; then
 
     mkdir backups
 
-    # Cria um link simbólico para o arquivo ou pasta de backup no diretório de instalação
-    ln -s "${latest_backup_file}" backups/
+    # Cria um link para o arquivo ou pasta de backup no diretório de instalação
+    ln "${latest_backup_file}" backups/
 
     # Executa o sidekick restore
     docker exec -it sidekick /bin/bash -c "sidekick restore"
