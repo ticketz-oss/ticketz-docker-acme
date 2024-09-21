@@ -55,6 +55,9 @@ if ! [[ $email =~ $emailregex ]] ; then
     exit 1
 fi
 
+# salva pasta atual
+CURFOLDER=${PWD}
+
 # Passo 1: Providencia uma VPS zerada e aponta os hostnames do teu DNS para ela
 # Passo 2: Instala o docker / apenas se já não tiver instalado
 which docker > /dev/null || curl -sSL https://get.docker.com | sh
@@ -111,7 +114,33 @@ LETSENCRYPT_HOST=\${BACKEND_HOST}
 LETSENCRYPT_EMAIL=\${EMAIL_ADDRESS}
 EOF
 
-# Passo 5: Sobe os containers
+
+latest_backup_file=$(ls -t ${CURFOLDER}/ticketz-backup-*.tar.gz 2>/dev/null | head -n 1)
+
+if [ -z "${latest_backup_file}" ] && ![ -d "backups" ]; then
+    echo "Backup encontrado. Preparando para restauração..."
+
+    mkdir backups
+
+    # Cria um link simbólico para o arquivo ou pasta de backup no diretório de instalação
+    ln -s "${latest_backup_file}" backups/
+
+    # Executa o sidekick restore
+    docker exec -it sidekick /bin/bash -c "sidekick restore"
+
+    echo "Restauração concluída."
+else
+    echo "Continuando a instalação..."
+fi
+
+# Inicia todos os serviços do Docker Compose
+if ! ( docker compose down && docker compose up -d ); then
+    echo "Falha ao reiniciar containers"
+    echo -e "\n\nAlterações precisam ser verificadas manualmente, procure suporte se necessário\n\n"
+    exit 1
+fi
+
+# Passo 6: Sobe os containers
 if ! ( docker compose down && docker compose up -d ); then
     echo "Falha ao reiniciar containers"
     echo -e "\n\nAlterações precisam ser verificadas manualmente, procure suporte se necessário\n\n"
