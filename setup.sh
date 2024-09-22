@@ -127,11 +127,9 @@ if [ -n "${latest_backup_file}" ] && ! [ -d "backups" ]; then
 
     # Executa o sidekick restore
     docker compose run --rm -T sidekick restore
-
-    echo "Restauração concluída."
-else
-    echo "Continuando a instalação..."
 fi
+
+echo "Continuando a instalação..."
 
 # Inicia todos os serviços do Docker Compose
 if ! ( docker compose down && docker compose up -d ); then
