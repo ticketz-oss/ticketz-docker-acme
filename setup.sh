@@ -115,6 +115,8 @@ LETSENCRYPT_EMAIL=\${EMAIL_ADDRESS}
 EOF
 
 
+DIDRESTORE=""
+
 latest_backup_file=$(ls -t ${CURFOLDER}/ticketz-backup-*.tar.gz 2>/dev/null | head -n 1)
 
 if [ -n "${latest_backup_file}" ] && ! [ -d "backups" ]; then
@@ -127,16 +129,10 @@ if [ -n "${latest_backup_file}" ] && ! [ -d "backups" ]; then
 
     # Executa o sidekick restore
     echo "" | docker compose run --rm -T sidekick restore
+    DIDRESTORE=1
 fi
 
 echo "Continuando a instalação..."
-
-# Inicia todos os serviços do Docker Compose
-if ! ( docker compose down && docker compose up -d ); then
-    echo "Falha ao reiniciar containers"
-    echo -e "\n\nAlterações precisam ser verificadas manualmente, procure suporte se necessário\n\n"
-    exit 1
-fi
 
 # Passo 6: Sobe os containers
 if ! ( docker compose down && docker compose up -d ); then
@@ -153,6 +149,12 @@ Após isso você pode acessar o Ticketz pela URL
 
         https://${frontend_host}
         
+EOF
+
+[ "${DIDRESTORE}" ] || cat << EOF
+
+O login é ${email} e a senha é 123456
+
 EOF
 
 echo "Removendo imagens anteriores..."
