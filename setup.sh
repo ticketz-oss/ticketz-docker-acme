@@ -126,7 +126,7 @@ if [ -n "${latest_backup_file}" ] && ! [ -d "backups" ]; then
     ln "${latest_backup_file}" backups/
 
     # Executa o sidekick restore
-    docker compose run --rm sidekick restore
+    docker compose run --rm -T sidekick restore
 
     echo "Restauração concluída."
 else
