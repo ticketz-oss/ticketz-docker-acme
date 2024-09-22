@@ -129,6 +129,12 @@ if [ -n "${latest_backup_file}" ] && ! [ -d "backups" ]; then
 
     # Executa o sidekick restore
     echo "" | docker compose run --rm -T sidekick restore
+    
+    if [ $? -gt 0 ] ; then
+      echo "Falha ao restaurar backup"
+      exit 1
+    fi
+    
     DIDRESTORE=1
 fi
 
