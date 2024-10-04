@@ -55,6 +55,9 @@ if ! [[ $email =~ $emailregex ]] ; then
     exit 1
 fi
 
+# salva pasta atual
+CURFOLDER=${PWD}
+
 # Passo 1: Providencia uma VPS zerada e aponta os hostnames do teu DNS para ela
 # Passo 2: Instala o docker / apenas se já não tiver instalado
 which docker > /dev/null || curl -sSL https://get.docker.com | sh
@@ -111,7 +114,33 @@ LETSENCRYPT_HOST=\${BACKEND_HOST}
 LETSENCRYPT_EMAIL=\${EMAIL_ADDRESS}
 EOF
 
-# Passo 5: Sobe os containers
+
+DIDRESTORE=""
+
+latest_backup_file=$(ls -t ${CURFOLDER}/ticketz-backup-*.tar.gz 2>/dev/null | head -n 1)
+
+if [ -n "${latest_backup_file}" ] && ! [ -d "backups" ]; then
+    echo "Backup encontrado. Preparando para restauração..."
+
+    mkdir backups
+
+    # Cria um link para o arquivo ou pasta de backup no diretório de instalação
+    ln "${latest_backup_file}" backups/
+
+    # Executa o sidekick restore
+    echo "" | docker compose run --rm -T sidekick restore
+    
+    if [ $? -gt 0 ] ; then
+      echo "Falha ao restaurar backup"
+      exit 1
+    fi
+    
+    DIDRESTORE=1
+fi
+
+echo "Continuando a instalação..."
+
+# Passo 6: Sobe os containers
 if ! ( docker compose down && docker compose up -d ); then
     echo "Falha ao reiniciar containers"
     echo -e "\n\nAlterações precisam ser verificadas manualmente, procure suporte se necessário\n\n"
@@ -126,6 +155,12 @@ Após isso você pode acessar o Ticketz pela URL
 
         https://${frontend_host}
         
+EOF
+
+[ "${DIDRESTORE}" ] || cat << EOF
+
+O login é ${email} e a senha é 123456
+
 EOF
 
 echo "Removendo imagens anteriores..."
