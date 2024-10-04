@@ -119,6 +119,37 @@ DIDRESTORE=""
 
 latest_backup_file=$(ls -t ${CURFOLDER}/ticketz-backup-*.tar.gz 2>/dev/null | head -n 1)
 
+if [ -f "retrieved_data.tar.gz" ]; then
+   echo "Dados de importação encotrados, iniciando o processo de carga..."
+
+   [ -d retrieve ] || mkdir retrieve
+   cp retrieved_data.tar.gz retrieve
+   
+   tmplog=/tmp/loadretrieved-$$-${RANDOM}.log
+   echo "" | docker compose run --rm -T -v ${CURFOLDER}/retrieve:/retrieve backend &> ${tmplog}
+   
+   if [ $? -gt 0 ] ; then
+      echo -e "\n\nErro ao carregar dados de retrieved_data.tar.gz.\n\nLog de erros pode ser encontrado em ${tmplog}\n\n"
+      exit 1
+   fi
+   
+   if [-f public_data.tar.gz ]; then
+      echo "Encontrado arquivo com dados para a pasta public, iniciando processo de restauração..."
+      
+      docker volume create --name ticketz-docker-acme_backend_public &> ${tmplog}
+      
+      if [ $? -gt 0 ]; then
+         echo -e "\n\nErro ao criar volume public\n\nLog de erros pode ser encontrado em ${tmplog}\n\n"
+         exit 1
+      fi
+      
+      cat public_data.tar.gz | docker run -i --rm -v ticketz-docker-acme_backend_public:/public alpine ash -c "tar -xzf - -C /public"
+   fi
+   
+   # Evita restaurar backup após carga de dados, embora pouco provável
+   latest_backup_file=
+fi
+
 if [ -n "${latest_backup_file}" ] && ! [ -d "backups" ]; then
     echo "Backup encontrado. Preparando para restauração..."
 
