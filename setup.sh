@@ -117,6 +117,9 @@ EOF
 
 DIDRESTORE=""
 
+## baixa todos os componentes
+docker compose pull
+
 latest_backup_file=$(ls -t ${CURFOLDER}/ticketz-backup-*.tar.gz 2>/dev/null | head -n 1)
 
 if [ -f ${CURFOLDER}/retrieved_data.tar.gz ]; then
