@@ -136,7 +136,7 @@ if [ -f ${CURFOLDER}/retrieved_data.tar.gz ]; then
       exit 1
    fi
    
-   if [-f ${CURFOLDER}/public_data.tar.gz ]; then
+   if [ -f ${CURFOLDER}/public_data.tar.gz ]; then
       echo "Encontrado arquivo com dados para a pasta public, iniciando processo de restauração..."
       
       docker volume create --name ticketz-docker-acme_backend_public &> ${tmplog}
