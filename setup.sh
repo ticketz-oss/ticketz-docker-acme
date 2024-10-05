@@ -129,7 +129,7 @@ if [ -f ${CURFOLDER}/retrieved_data.tar.gz ]; then
    cp ${CURFOLDER}/retrieved_data.tar.gz retrieve
    
    tmplog=/tmp/loadretrieved-$$-${RANDOM}.log
-   echo "" | docker compose run --rm -T -v ${CURFOLDER}/retrieve:/retrieve backend &> ${tmplog}
+   echo "" | docker compose run --rm -T -v retrieve:/retrieve backend &> ${tmplog}
    
    if [ $? -gt 0 ] ; then
       echo -e "\n\nErro ao carregar dados de retrieved_data.tar.gz.\n\nLog de erros pode ser encontrado em ${tmplog}\n\n"
