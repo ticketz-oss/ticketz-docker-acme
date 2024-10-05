@@ -120,37 +120,45 @@ DIDRESTORE=""
 ## baixa todos os componentes
 docker compose pull
 
-latest_backup_file=$(ls -t ${CURFOLDER}/ticketz-backup-*.tar.gz 2>/dev/null | head -n 1)
-
 if [ -f ${CURFOLDER}/retrieved_data.tar.gz ]; then
    echo "Dados de importação encotrados, iniciando o processo de carga..."
 
    [ -d retrieve ] || mkdir retrieve
    cp ${CURFOLDER}/retrieved_data.tar.gz retrieve
    
-   tmplog=/tmp/loadretrieved-$$-${RANDOM}.log
-   echo "" | docker compose run --rm -T -v ${PWD}/retrieve:/retrieve backend &> ${tmplog}
+   tmplog=/tmp/loadretrieved-$$-${RANDOM}
+   echo "" | docker compose run --rm -T -v ${PWD}/retrieve:/retrieve backend &> ${tmplog}-retrieve.log
    
    if [ $? -gt 0 ] ; then
-      echo -e "\n\nErro ao carregar dados de retrieved_data.tar.gz.\n\nLog de erros pode ser encontrado em ${tmplog}\n\n"
+      echo -e "\n\nErro ao carregar dados de retrieved_data.tar.gz.\n\nLog de erros pode ser encontrado em ${tmplog}-retrieve.log\n\n"
       exit 1
    fi
    
    if [ -f ${CURFOLDER}/public_data.tar.gz ]; then
       echo "Encontrado arquivo com dados para a pasta public, iniciando processo de restauração..."
       
-      docker volume create --name ticketz-docker-acme_backend_public &> ${tmplog}
+      docker volume create --name ticketz-docker-acme_backend_public &> ${tmplog}-createpublic.log
       
       if [ $? -gt 0 ]; then
-         echo -e "\n\nErro ao criar volume public\n\nLog de erros pode ser encontrado em ${tmplog}\n\n"
+         echo -e "\n\nErro ao criar volume public\n\nLog de erros pode ser encontrado em ${tmplog}-createpublic.log\n\n"
          exit 1
       fi
       
-      cat ${CURFOLDER}/public_data.tar.gz | docker run -i --rm -v ticketz-docker-acme_backend_public:/public alpine ash -c "tar -xzf - -C /public"
+      cat ${CURFOLDER}/public_data.tar.gz | docker run -i --rm -v ticketz-docker-acme_backend_public:/public alpine ash -c "tar -xzf - -C /public" &> ${tmplog}-restorepublic.log
+
+      if [ $? -gt 0 ]; then
+         echo -e "\n\nErro ao restaurar volume public\n\nLog de erros pode ser encontrado em ${tmplog}-restorepublic.log\n\n"
+         exit 1
+      fi
+      
    fi
    
    # Evita restaurar backup após carga de dados, embora pouco provável
-   latest_backup_file=
+   DIDRESTORE=1
+fi
+
+if ! [ "${DIDRESTORE}" ]; then
+    latest_backup_file=$(ls -t ${CURFOLDER}/ticketz-backup-*.tar.gz 2>/dev/null | head -n 1)
 fi
 
 if [ -n "${latest_backup_file}" ] && ! [ -d "backups" ]; then
@@ -194,6 +202,12 @@ EOF
 [ "${DIDRESTORE}" ] || cat << EOF
 
 O login é ${email} e a senha é 123456
+
+EOF
+
+[ "${DIDRESTORE}" ] && cat << EOF
+
+Dados foram restaurados, logins e senhas são as mesmas do sistema de origem.
 
 EOF
 
