@@ -2,8 +2,8 @@
 
 # Função para mostrar a mensagem de uso
 show_usage() {
-    echo -e     "Uso: \n\n      curl -sSL https://get.ticke.tz | sudo bash -s [-b <branchname>] <frontend_host> <email>\n\n"
-    echo -e "Exemplo: \n\n      curl -sSL https://get.ticke.tz | sudo bash -s ticketz.exemplo.com.br email@exemplo.com.br\n\n"
+    echo -e     "Uso: \n\n      curl -sSL CUSTOM-GET-URL | sudo bash -s [-b <branchname>] <frontend_host> <email>\n\n"
+    echo -e "Exemplo: \n\n      curl -sSL CUSTOM-GET-URL | sudo bash -s host.exemplo.com.br email@exemplo.com.br\n\n"
 }
 
 # Verifica se está rodando usando o bash
@@ -62,9 +62,14 @@ CURFOLDER=${PWD}
 # Passo 2: Instala o docker / apenas se já não tiver instalado
 which docker > /dev/null || curl -sSL https://get.docker.com | sh
 
+[ -f credentials.env ] && . credentials.env
+
+[ -n "${DOCKER_REGISTRY}" ] && [ -n "${DOCKER_USER}" ] && [ -n "${DOCKER_PASSWORD}" ] && \
+echo ${DOCKER_PASSWORD} | docker login ${DOCKER_REGISTRY} --username ${DOCKER_USER} --password-stdin
+
 # Passo 3: Baixa o projeto e entra na pasta
-[ -d ticketz-docker-acme ] || git clone https://github.com/ticketz-oss/ticketz-docker-acme.git
-cd ticketz-docker-acme
+[ -d CUSTOM-PROJECT-docker-acme ] || git clone https://github.com/CUSTOM-GITHUB-USER/CUSTOM-PROJECT-docker-acme.git
+cd CUSTOM-PROJECT-docker-acme
 if ! git diff-index --quiet HEAD -- ; then
   echo "Salvando alterações locais com git stash push"
   git stash push &> /dev/null
@@ -193,7 +198,7 @@ cat << EOF
 A geração dos certificados e a inicialização do serviço pode levar
 alguns minutos.
 
-Após isso você pode acessar o Ticketz pela URL
+Após isso você pode acessar o sistema pela URL
 
         https://${frontend_host}
         
