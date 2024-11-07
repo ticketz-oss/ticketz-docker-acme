@@ -82,7 +82,6 @@ FRONTEND_HOST=${FRONTEND_HOST}
 EMAIL_ADDRESS=${EMAIL_ADDRESS}
 
 TYPEBOT_ENCRYPTION_SECRET=$(openssl rand -base64 24)
-TYPEBOT_ADMIN_PASSWORD=$(head -c 6 /dev/urandom | base64)
 
 MINIO_ROOT_CLIENT_ID=$(head -c 24 /dev/urandom | base64)
 MINIO_ROOT_CLIENT_SECRET=$(head -c 24 /dev/urandom | base64)
@@ -129,7 +128,6 @@ Typebot Builder:
 
              URL: https://${TYPEBOT_BUILDER_HOST}
             User: ${EMAIL_ADDRESS}
-        Password: ${TYPEBOT_ADMIN_PASSWORD}
    
 Minio S3 Console:
 
