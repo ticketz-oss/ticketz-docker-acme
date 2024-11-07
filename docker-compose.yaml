@@ -11,6 +11,7 @@ volumes:
   ngx_acme:
   redis_data:
   postgres_data:
+  minio_data:
   backend_public:
   backend_private:
     
@@ -72,6 +73,7 @@ services:
     image: ghcr.io/ticketz-oss/ticketz-frontend:pro-head
     volumes:
       - backend_public:/var/www/backend-public
+      - ./confs/frontend-ticketz.d:/etc/nginx/ticketz.d
     env_file:
       - .env-frontend
     restart: always
@@ -130,3 +132,68 @@ services:
       - postgres
     networks:
       - ticketz
+
+
+  minio:
+    image: minio/minio
+    command: server /data --console-address ":9001"
+    env_file:
+      - .env-integrations
+      - .env-secrets
+      - .env-minio
+    expose:
+      - 9000
+      - 9001
+    volumes:
+      - minio_data:/data
+    networks:
+      - nginx-proxy
+      - ticketz
+
+  # This service just makes sure a bucket with the right policies is created
+  createbuckets:
+    image: minio/mc
+    env_file:
+      - .env-integrations
+      - .env-secrets
+      - .env-minio
+    depends_on:
+      - minio
+    entrypoint: >
+      /bin/sh -c "
+      sleep 10;
+      /usr/bin/mc config host add minio http://minio:9000 minio \$\{MINIO_ROOT_PASSWORD};
+      /usr/bin/mc mb minio/typebot;
+      /usr/bin/mc anonymous set public minio/typebot/public;
+      exit 0;
+      "
+    networks:
+      - nginx-proxy
+
+  typebot-builder:
+    image: baptistearno/typebot-builder:latest
+    restart: always
+    depends_on:
+      - postgres
+    extra_hosts:
+      - 'host.docker.internal:host-gateway'
+    env_file:
+      - .env-integrations
+      - .env-secrets
+      - .env-typebot-common
+      - .env-typebot-builder
+    networks:
+      - ticketz
+      - nginx-proxy
+
+  typebot-viewer:
+    image: baptistearno/typebot-viewer:latest
+    restart: always
+    env_file:
+      - .env-integrations
+      - .env-secrets
+      - .env-typebot-common
+      - .env-typebot-viewer
+    networks:
+      - ticketz
+      - nginx-proxy
