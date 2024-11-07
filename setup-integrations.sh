@@ -118,7 +118,7 @@ echo "Finalizando serviços"
 docker compose down
 
 echo "Inicializando serviçose"
-docker compose -up -d
+docker compose up -d
 
 . .env-secrets
 
