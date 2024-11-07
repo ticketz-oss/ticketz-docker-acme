@@ -62,6 +62,11 @@ if [ -f .env-secrets ]; then
    exit 1
 fi
 
+if ! docker compose exec -T postgres psql -U ticketz -c "DROP DATABASE IF EXISTS typebot;" -c "CREATE DATABASE typebot;" > /dev/null; then
+   echo -e "\nFalha ao (re)criar database typebot\n";
+   exit 1
+fi
+
 . .env-backend
 . .env-integrations
 
