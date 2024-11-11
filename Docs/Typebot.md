@@ -33,11 +33,21 @@ apontando para o mesmo servidor onde está sendo feita a instalação.
 
 #### Configuração SMTP
 
-Os parâmetros a seguir devem ser definidos para o correto funcionamento do envio
-de email pelo Typebot. Isso é muito importante pois todas as autorizações de
-acesso são validadas por um código enviado por email.
+O arquivo `.env-integrations` ainda precisa de informações necessárioas
+para o correto funcionamento do envio de email pelo Typebot. Isso é muito
+importante pois todas as autorizações de acesso são validadas por um
+código enviado por email.
 
-```bash
+#### Arquivo de exemplo:
+
+Você pode usar esse exemplo como base para configurar o arquivo `.env-integrations`
+lembrando de substituir pelos valores adequados.
+
+```
+TYPEBOT_BUILDER_HOST=typebot.example.com
+TYPEBOT_VIEWER_HOST=typebot-viewer.example.com
+MINIO_HOST=minio.example.com
+
 SMTP_FROM=email@example.com
 SMTP_USERNAME=email@example.com
 SMTP_PASSWORD=GoodPass
@@ -106,3 +116,9 @@ observar a utilização de arquivos por parte do typebot.
 
 O login da console é feito com os valores de `MINIO_ROOT_CLIENT_ID` e 
 `MINIO_ROOT_CLIENT_PASSWORD` fornecidos logo após a conclusão da instalação
+
+Uso das Integrações
+-------------------
+
+Para fazer a utilização das integrações leia o documento [Ingtegration Use](Integration Use.md)
+
