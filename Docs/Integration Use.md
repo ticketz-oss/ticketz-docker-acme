@@ -67,4 +67,4 @@ pode ser importado no seu typebot para facilitar a criação dos seus
 fluxos.
 
 Mais informações sobre os triggers disponíveis estão na página
-[Integration Triggers](Integration Triggers.md)
+[Integration Triggers](Integration%20Triggers.md)
