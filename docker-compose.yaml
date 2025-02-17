@@ -1,6 +1,7 @@
 networks:
   ticketz:
   nginx-proxy:
+  n8n:
 
 volumes:
   ngx_conf:
@@ -12,6 +13,8 @@ volumes:
   redis_data:
   postgres_data:
   minio_data:
+  n8n_data:
+  n8n-redis_data:
   backend_public:
   backend_private:
     
@@ -197,3 +200,39 @@ services:
     networks:
       - ticketz
       - nginx-proxy
+
+  n8n:
+    image: docker.n8n.io/n8nio/n8n
+    container_name: n8n
+    env_file:
+      - .env-integrations
+      - .env-secrets
+      - .env-n8n
+    volumes:
+      - n8n_data:/home/node/.n8n
+    networks:
+      - n8n
+      - ticketz
+      - nginx-proxy
+
+  n8n-redis:
+    image: redis:7-alpine
+    command: redis-server --appendonly yes
+    expose:
+      - 6379
+    restart: always
+    volumes:
+      - n8n-redis_data:/data
+    networks:
+      - n8n
+
+  pgadmin4:
+    image: dpage/pgadmin4:8
+    restart: always
+    env_file:
+      - .env-pgadmin4
+    volumes:
+      - ./confs/pgadmin4-servers.json:/pgadmin4/servers.json
+    networks:
+      - nginx-proxy
+      - ticketz
