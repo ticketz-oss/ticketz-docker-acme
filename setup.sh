@@ -13,6 +13,13 @@ echored() {
    echo -e "  \033[0m"
 }
 
+# Função para mensagem em azul
+echoblue() {
+   echo -ne "  \033[44m\033[37m\033[1m"
+   echo -n "  $1"
+   echo -e "  \033[0m"
+}
+
 # Verifica se está rodando usando o bash
 
 if ! [ -n "$BASH_VERSION" ]; then
@@ -26,34 +33,6 @@ if [ "$1" = "-b" ] ; then
    BRANCH=$2
    shift
    shift
-fi
-
-if [ "$BRANCH" = "" ] ; then
-   echo ""
-   echored "                                               "
-   echored "  Você está instalando o Ticketz Opensource    "
-   echored "                                               "
-   echored "  O Ticketz Opensource é um sistema de código  "
-   echored "  aberto, disponível gratuitamente a partir    "
-   echored "  da página do projeto: https://ticke.tz       "
-   echored "                                               "
-   echored "  O Ticketz Opensource não pode ser vendido!   "
-   echored "                                               "
-   echored "  Se alguém te cobrou algo por este sistema    "
-   echored "  é recomendado que solicite reembolso por     "
-   echored "  se tratar de uma cobrança indevida.          "
-   echored "                                               "
-   echored "  Por ser um sistema opensource você pode      "
-   echored "  prosseguir com a instalação mesmo assim e    "
-   echored "  conhecer o sistema.                          "
-   echored "                                               "
-   echored "  Aperte CTRL-C para cancelar                  "
-   echored "                                               "
-   echored "  A instalação irá prosseguir em 30 segundos   "
-   echored "                                               "
-   echo ""
-   sleep 30
-   echo "Prosseguindo..."
 fi
 
 # Verifica se está rodando como root
@@ -88,6 +67,42 @@ if ! [[ $email =~ $emailregex ]] ; then
     echo "email inválido"
     show_usage
     exit 1
+fi
+
+echo ""
+echoblue "                                               "
+echoblue "  Ticketz - Site oficial https://ticke.tz      "
+echoblue "                                               "
+echoblue "  Contato Whatsapp: +55 49 99981 2291          "
+echoblue "                    https://wa.me/554999812291 "
+echoblue "                                               "
+
+if [ "$BRANCH" = "" ] ; then
+   echo ""
+   echored "                                               "
+   echored "  Você está instalando o Ticketz Opensource    "
+   echored "                                               "
+   echored "  O Ticketz Opensource é um sistema de código  "
+   echored "  aberto, disponível gratuitamente a partir    "
+   echored "  da página do projeto: https://ticke.tz       "
+   echored "                                               "
+   echored "  O Ticketz Opensource não pode ser vendido!   "
+   echored "                                               "
+   echored "  Se alguém te cobrou algo por este sistema    "
+   echored "  é recomendado que solicite reembolso por     "
+   echored "  se tratar de uma cobrança indevida.          "
+   echored "                                               "
+   echored "  Por ser um sistema opensource você pode      "
+   echored "  prosseguir com a instalação mesmo assim e    "
+   echored "  conhecer o sistema.                          "
+   echored "                                               "
+   echored "  Aperte CTRL-C para cancelar                  "
+   echored "                                               "
+   echored "  A instalação irá prosseguir em 30 segundos   "
+   echored "                                               "
+   echo ""
+   sleep 30
+   echo "Prosseguindo..."
 fi
 
 # salva pasta atual
