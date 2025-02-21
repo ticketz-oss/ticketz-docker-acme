@@ -6,6 +6,13 @@ show_usage() {
     echo -e "Exemplo: \n\n      curl -sSL https://get.ticke.tz | sudo bash -s ticketz.exemplo.com.br email@exemplo.com.br\n\n"
 }
 
+# Função para mensagem em vermelho
+echored() {
+   echo -ne "  \033[41m\033[37m\033[1m"
+   echo -n "  $1"
+   echo -e "  \033[0m"
+}
+
 # Verifica se está rodando usando o bash
 
 if ! [ -n "$BASH_VERSION" ]; then
@@ -19,6 +26,34 @@ if [ "$1" = "-b" ] ; then
    BRANCH=$2
    shift
    shift
+fi
+
+if [ "$BRANCH" = "" ] ; then
+   echo ""
+   echored "                                               "
+   echored "  Você está instalando o Ticketz Opensource    "
+   echored "                                               "
+   echored "  O Ticketz Opensource é um sistema de código  "
+   echored "  aberto, disponível gratuitamente a partir    "
+   echored "  da página do projeto: https://ticke.tz       "
+   echored "                                               "
+   echored "  O Ticketz Opensource não pode ser vendido!   "
+   echored "                                               "
+   echored "  Se alguém te cobrou algo por este sistema    "
+   echored "  é recomendado que solicite reembolso por     "
+   echored "  se tratar de uma cobrança indevida.          "
+   echored "                                               "
+   echored "  Por ser um sistema opensource você pode      "
+   echored "  prosseguir com a instalação mesmo assim e    "
+   echored "  conhecer o sistema.                          "
+   echored "                                               "
+   echored "  Aperte CTRL-C para cancelar                  "
+   echored "                                               "
+   echored "  A instalação irá prosseguir em 30 segundos   "
+   echored "                                               "
+   echo ""
+   sleep 30
+   echo "Prosseguindo..."
 fi
 
 # Verifica se está rodando como root
