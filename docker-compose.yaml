@@ -57,7 +57,7 @@ services:
       - nginx-proxy
 
   backend:
-    image: ghcr.io/ticketz-oss/ticketz-backend:pro-head
+    image: ghcr.io/ticketz-oss/ticketz-backend:pro
     volumes:
       - backend_public:/usr/src/app/public
       - backend_private:/usr/src/app/private
@@ -73,7 +73,7 @@ services:
       - nginx-proxy
 
   frontend:
-    image: ghcr.io/ticketz-oss/ticketz-frontend:pro-head
+    image: ghcr.io/ticketz-oss/ticketz-frontend:pro
     volumes:
       - backend_public:/var/www/backend-public
       - ./confs/frontend-ticketz.d:/etc/nginx/ticketz.d
@@ -140,6 +140,7 @@ services:
   minio:
     image: minio/minio
     command: server /data --console-address ":9001"
+    restart: always
     env_file:
       - .env-integrations
       - .env-secrets
