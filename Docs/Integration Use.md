@@ -27,5 +27,5 @@ interno ou outras automações que vierem a ser implementadas no futuro.
 
 Mais detalhes podem ser vistos nos guias específicos de cada integração:
 
-* [Uso do Typebot](Integration Use Typebot.md)
-* [Uso do Webhook/N8N](Integration Use Webhook.md)
+* [Uso do Typebot](Integration%20Use%20Typebot.md)
+* [Uso do Webhook/N8N](Integration%20Use%20Webhook.md)

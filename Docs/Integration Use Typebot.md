@@ -69,5 +69,10 @@ O exemplo a seguir transfere a conversa atual par a fila 99:
 #{ "queueId": 99 }
 ```
 
+Um arquivo de exemplo com diversos comandos pode ser
+[baixado aqui - clique com botão direito e escolha Salvar](https://raw.githubusercontent.com/ticketz-oss/ticketz-docker-acme/refs/heads/pro/Docs/typebot-export-bolhas-de-triggers.json).
+Os comandos podem ser copiados de um fluxo para outro de forma a facilitar
+o desenvolvimento.
+
 Mais informações sobre os triggers disponíveis estão na página
 [Integration Triggers](Integration%20Triggers.md)
