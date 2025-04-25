@@ -148,12 +148,18 @@ cat example.env-backend \
   | sed -e "s/^BACKEND_PATH=.*/BACKEND_PATH=$backend_path/g"  \
   | sed -e "s/^FRONTEND_HOST=.*/FRONTEND_HOST=$frontend_host/g" \
   | sed -e "s/^EMAIL_ADDRESS=.*/EMAIL_ADDRESS=$email/g"  > .env-backend
-
+  
 cat example.env-frontend \
   | sed -e "s/^BACKEND_HOST=.*/BACKEND_HOST=$backend_host/g" \
   | sed -e "s/^BACKEND_PATH=.*/BACKEND_PATH=$backend_path/g" \
   | sed -e "s/^FRONTEND_HOST=.*/FRONTEND_HOST=$frontend_host/g" \
   | sed -e "s/^EMAIL_ADDRESS=.*/EMAIL_ADDRESS=$email/g" > .env-frontend
+
+cat >> .env-frontend << EOF
+
+SETUP_SYSTEM=get.ticke.tz
+
+EOF
 
 ## inclui configuração para o acme-companion se o backend tiver host a parte
 [ -z "$backend_path" ] && cat >> .env-backend << EOF
