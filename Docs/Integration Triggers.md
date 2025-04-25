@@ -1,26 +1,59 @@
-Triggers de Integrações
+Comandos de Integrações
 =======================
 
-Os "Triggers" são estruturas específicas que uma integração pode retornar ao
-Ticketz através de uma mensagem ou endpoint de webhook que executam ações
-específicas no Ticket a que a integração está associada.
+Os comandos, também chamados de "Triggers" são estruturas específicas que
+uma integração pode retornar ao Ticketz através de uma mensagem ou endpoint
+de webhook que executam ações específicas no Ticket a que a integração está
+associada.
 
-Utilização nas Integrações
---------------------------
+Formato de Mensagem
+-------------------
 
-### Uso por mensagem retornada do Typebot
-
-Para utilizar os triggers no typebot basta utilizar um objeto do tipo Texto e
-formatar o trigger em JSON logo após o caractere `#`, por exemplo:
+Uma mensagem a ser entregue utilizando segue o formato:
 
 ```
-#{"closeTicket": true}
+{
+  "type": string;
+  "content": string;
+  "mediaUrl": string;
+}
 ```
 
-### Uso por retorno de Webhook
+* `type` pode ser um dos valores: `text`, `image`, `video`, `audio`,
+  `gif` ou `document`
+* `content` para mensagens do tipo texto deve ter o texto a ser transmitido
+* `mediaUrl` para os outros tipos deve ter a URL do arquivo a ser enviado
 
-Ao chamar uma integração por Webhook o Ticketz pode receber como resposta
-um array de mensagens e ações. Por exemplo:
+Utilização dos comandos
+-----------------------
+
+Os comandos e mensagens podem ser fornecidos ao Ticketz por três formas:
+
+### Bolha de texto
+
+Exclusivamente para integração Typebot, um comando por vez utilizando
+uma bolha de texto iniciando com o caractere `#` seguido pelo payload
+em formato json.
+
+O exemplo a seguir transfere a conversa para a fila 99:
+
+```
+#{
+  "queueId": 99
+}
+```
+
+### Retorno de Webhook
+
+Exclusivamente para a integração Webhook, retornando a requisição com
+um payload json, que pode conter:
+
+* Apenas um comando
+* Apenas uma mensagem com comando opcional
+* Um array de mensagens, cada mensagem podendo ter um comando opcional.
+
+O exemplo a seguir demonstra o uso de um array de mensagens com
+duas delas tendo um comando:
 
 ```json
 [
@@ -30,7 +63,8 @@ um array de mensagens e ações. Por exemplo:
   },
   {
      "type": "text",
-     "content": "Outra mensagem"
+     "content": "Outra mensagem",
+     "trigger": { "action": "wait", "seconds": 2 }
   },
   {
      "type": "text",
@@ -40,33 +74,39 @@ um array de mensagens e ações. Por exemplo:
 ]
 ```
 
-### Uso por HTTP Request
+### Uma requisição HTTP para o backend
 
-Ao acionar uma integração o Ticketz fornece um token de sessão que pode
-ser utilizado para acessar um webhook em {TICKETZ_URL}/integrations/webhook
-pelo método POST.
+Este recurso pode ser utilizado tanto pelo Typebot quanto pelo Webhook,
+e até por sistemas externos se for providenciada uma forma de transferir
+o token de autorização.
 
-A autenticação é pelo cabeçalho "Authorization: Bearer" e o payload deve
-ser um dos triggers que possuem a propriedade "action" (da última sessão
-deste documento)
+Uma das variáveis fornecidas à integração é o token de autenticação,
+também é fornecida uma variável com a URL do backend completa.
 
+O endpoint é ``${BACKEND_URL}/integrations/webhook``
 
-Compatibilidade com Whaticket
------------------------------
+A requisição é do tipo POST
 
-Os triggers a seguir estavam presentes nas implementações mais comuns
-de integração com Typebot do Whaticket SaaS e foram replicados no Ticketz
-para facilitar a migração de fluxos.
+A autenticação é feita pelo cabeçalho `Authorization: Bearer ${token}`
 
-### Parar o chatbot
+O Payload pode ser qualquer formato mencionado no item
+anterior (Retorno por webhook)
 
-Apenas encerra a integração removendo a marca de chatbot do ticket deixando
-a conversa na aba "Aguardando"
+Comandos disponíveis
+--------------------
+
+### Envio de mensagem
+
+Envia uma mensagem para o canal da conversa. O valor "message" pode
+ser um único objeto de mensagem conforme o tipo especificado no item
+anterior ou um array com vários objetos de mensagens.
 
 ```json
 {
-  "stopbot": true
-}
+  "message": {
+    "type": "text",
+    "content": "conteúdo da mensagem"
+  }}}
 ```
 
 ### Transferência de Fila
@@ -92,28 +132,35 @@ caso o ticket já será aceito e aparecerá na aba "Atendendo" do novo usuário.
 }
 ```
 
-Triggers exclusivos do Ticketz
-------------------------------
+### Encerrar a sessão de integração
+
+Apenas encerra a integração removendo a marca de chatbot do ticket deixando
+a conversa na aba "Aguardando"
+
+```json
+{
+  "action": "endSession"
+}
+```
+
+### Parar o chatbot
+
+Efetivamente esse trigger é idêntico ao "endSession" e está sendo mantido
+para compatibilidade com automações já existentes.
+
+```json
+{
+  "stopbot": true
+}
+```
 
 ### Encerrar o atendimento
 
 Encerra o ticket atual colocando ele na aba de "Resolvidos"
 
 ```json
-
 {
   "closeTicket": true
-}
-```
-
-### Encerrar a sessão de integração
-
-Efetivamente esse trigger é idêntico ao "stopbot" da sessão de compatibilidade
-com Whaticket.
-
-```json
-{
-  "action": "endSession"
 }
 ```
 
@@ -152,5 +199,31 @@ interface TicketData {
   queueId: number;    // transfere para outra fila
   justClose: boolean; // para comandar o fechamento do ticket 
   annotation: string; // ao transferir adiciona a anotação no atendimento
+}
+```
+
+### Aguardar um tempo
+
+Aguarda um tempo em segundos - este comando só é efetivo quando
+utilizado em um array de comandos (ver mais a seguir)
+
+```json
+{
+  "action": "wait",
+  "seconds": 2
+}
+```
+
+### Ping
+
+Esse comando faz com que o ticketz responda com uma mensagem
+automática "pong".
+
+Serve para forçar a ordem de alguns processamentos no typebot
+colocando ele logo antes de um campo texto.
+
+```json
+{
+  "action": "ping"
 }
 ```
