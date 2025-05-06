@@ -131,6 +131,7 @@ services:
       - backend_public:/backend-public
       - backend_private:/backend-private
       - ./backups:/backups
+      - ./retrieve:/retrieve
     depends_on:
       - postgres
     networks:

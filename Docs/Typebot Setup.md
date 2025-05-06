@@ -120,5 +120,7 @@ O login da console é feito com os valores de `MINIO_ROOT_CLIENT_ID` e
 Uso das Integrações
 -------------------
 
-Para fazer a utilização das integrações leia o documento [Ingtegration Use](Integration%20Use.md)
+Para fazer a utilização da integração com o Typebot leia os documento:
 
+* [Integration Use](Integration%20Use.md)
+* [Typebot Use](Integration%20Use%20Typebot.md)
