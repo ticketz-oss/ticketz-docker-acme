@@ -14,7 +14,6 @@ volumes:
   postgres_data:
   minio_data:
   n8n_data:
-  n8n-redis_data:
   backend_public:
   backend_private:
     
@@ -88,7 +87,7 @@ services:
       - nginx-proxy
 
   postgres:
-    image: postgres:16-alpine
+    image: pgvector/pgvector:pg16
     volumes:
       - postgres_data:/var/lib/postgresql/data
     environment:
@@ -131,6 +130,7 @@ services:
       - backend_public:/backend-public
       - backend_private:/backend-private
       - ./backups:/backups
+      - ./retrieve:/retrieve
     depends_on:
       - postgres
     networks:
@@ -213,5 +213,4 @@ services:
       - n8n_data:/home/node/.n8n
     networks:
       - n8n
-      - ticketz
       - nginx-proxy
