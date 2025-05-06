@@ -48,9 +48,9 @@ if [ -f docker-compose-acme.yaml ] && [ -f .env-backend-acme ] && [ -n "${BACKEN
    echored "  a partir de imagens pré compiladas do        "
    echored "  projeto ticketz                              "
    echored "                                               "
-   echored "  Aguarde 20 segundos.                         "
+   echored "  Aguarde 20 segundos...                       "
    echored "                                               "
-   echored "  Aperte CTRL-C para cancelar                  "
+   echored "  ...ou aperte CTRL-C para cancelar            "
    echored "                                               "
    sleep 20
    echo "Prosseguindo..."
@@ -89,9 +89,19 @@ elif [ -f docker-compose.yaml ] ; then
   ## nothing to do, already here
   echo -n "" > /dev/null
 elif [ "${SUDO_USER}" = "root" ] ; then
-  cd /root/ticketz-docker-acme || exit 1
+  if [ -d /root/ticketz-docker-acme ] ; then
+    cd /root/ticketz-docker-acme || exit 1
+  else
+    echo "Diretório ticketz-docker-acme não encontrado"
+    exit 1
+  fi
 else
-  cd /home/${SUDO_USER}/ticketz-docker-acme || exit 1
+  if [ -d /home/${SUDO_USER}/ticketz-docker-acme ] ; then
+      cd /home/${SUDO_USER}/ticketz-docker-acme || exit 1
+  else
+      echo "Diretório ticketz-docker-acme não encontrado"
+      exit 1
+  fi
 fi
 
 echo "Working on $PWD/ticketz-docker-acme folder"
@@ -102,7 +112,7 @@ if ! [ -f docker-compose.yaml ] ; then
 fi
 
 if [ -n "${BRANCH}" ] ; then
-  if ! git diff-index --quiet HEAD -- ; then
+  if ! git diff --quiet; then
     echo "Salvando alterações locais com git stash push"
     git stash push &> /dev/null
   fi
@@ -119,10 +129,28 @@ if [ -n "${BRANCH}" ] ; then
       exit 1
     fi
   fi
-  echo "Trazendo updates da branch ${BRANCH}"
-  git pull &> /dev/null
 fi
 
+if git diff --quiet; then
+  echo "Trazendo updates da branch ${BRANCH}"
+  git pull &> /dev/null
+else
+  echored "                                               "
+  echored "  A T E N Ç Ã O                                "
+  echored "                                               "
+  echored "  Você tem alterações locais, isso impede a    "
+  echored "  obtenção de atualizações do repositório da   "
+  echored "  stack.                                       "
+  echored "                                               "
+  echored "  É aconselhado reverter para voltar a seguir  "
+  echored "  as configurações publicadas no projeto.      "
+  echored "                                               "
+  echored "  Aguarde 20 segundos para prosseguir...       "
+  echored "                                               "
+  echored "  ...ou Aperte CTRL-C para cancelar            "
+  echored "                                               "
+  sleep 20
+fi
 
 echo "Baixando novas imagens"
 docker compose pull || show_error "Erro ao baixar novas imagens"
