@@ -1,56 +1,13 @@
 networks:
   ticketz:
-  nginx-proxy:
 
 volumes:
-  ngx_conf:
-  ngx_vhost:
-  ngx_html:
-  ngx_dhparam:
-  ngx_certs:
-  ngx_acme:
   redis_data:
   postgres_data:
   backend_public:
   backend_private:
     
 services:
-
-  nginx-proxy:
-    image: nginxproxy/nginx-proxy
-    container_name: ticketz-nginx-proxy
-    restart: always
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ngx_conf:/etc/nginx/conf.d
-      - ngx_vhost:/etc/nginx/vhost.d
-      - ngx_html:/usr/share/nginx/html
-      - ngx_dhparam:/etc/nginx/dhparam
-      - ngx_certs:/etc/nginx/certs:ro
-      - ./confs/nginx-ticketz.conf:/etc/nginx/conf.d/ticketz.conf
-      - /var/run/docker.sock:/tmp/docker.sock:ro
-    networks:
-      - nginx-proxy
-
-  acme-companion:
-    image: nginxproxy/acme-companion
-    container_name: ticketz-acme-companion
-    restart: always
-    depends_on:
-      - nginx-proxy
-    volumes:
-      - ngx_vhost:/etc/nginx/vhost.d
-      - ngx_html:/usr/share/nginx/html
-      - ngx_dhparam:/etc/nginx/dhparam:ro
-      - ngx_certs:/etc/nginx/certs
-      - ngx_acme:/etc/acme.sh
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-    environment:
-      - NGINX_PROXY_CONTAINER=ticketz-nginx-proxy
-    networks:
-      - nginx-proxy
 
   backend:
     image: ghcr.io/ticketz-oss/ticketz-backend:pro
@@ -61,12 +18,10 @@ services:
       - .env-backend
     restart: always
     depends_on:
-      - acme-companion
       - postgres
       - redis
     networks:
       - ticketz
-      - nginx-proxy
 
   frontend:
     image: ghcr.io/ticketz-oss/ticketz-frontend:pro
@@ -76,11 +31,9 @@ services:
       - .env-frontend
     restart: always
     depends_on:
-      - acme-companion
       - backend
     networks:
       - ticketz
-      - nginx-proxy
 
   postgres:
     image: postgres:16-alpine
