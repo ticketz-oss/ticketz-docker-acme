@@ -138,6 +138,8 @@ services:
     image: minio/minio
     command: server /data --console-address ":9001"
     restart: always
+    depends_on:
+      - acme-companion
     env_file:
       - .env-integrations
       - .env-secrets
@@ -176,6 +178,7 @@ services:
     restart: always
     depends_on:
       - postgres
+      - acme-companion
     extra_hosts:
       - 'host.docker.internal:host-gateway'
     env_file:
@@ -190,6 +193,8 @@ services:
   typebot-viewer:
     image: baptistearno/typebot-viewer:latest
     restart: always
+    depends_on:
+      - acme-companion
     env_file:
       - .env-integrations
       - .env-secrets
