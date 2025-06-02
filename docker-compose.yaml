@@ -62,7 +62,6 @@ services:
       - .env-backend
     restart: always
     depends_on:
-      - acme-companion
       - postgres
       - redis
     networks:
