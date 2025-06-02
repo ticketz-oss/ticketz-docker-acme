@@ -6,6 +6,20 @@ show_usage() {
     echo -e "Exemplo: \n\n      curl -sSL https://get.ticke.tz | sudo bash -s ticketz.exemplo.com.br email@exemplo.com.br\n\n"
 }
 
+# Função para mensagem em vermelho
+echored() {
+   echo -ne "  \033[41m\033[37m\033[1m"
+   echo -n "  $1"
+   echo -e "  \033[0m"
+}
+
+# Função para mensagem em azul
+echoblue() {
+   echo -ne "  \033[44m\033[37m\033[1m"
+   echo -n "  $1"
+   echo -e "  \033[0m"
+}
+
 # Verifica se está rodando usando o bash
 
 if ! [ -n "$BASH_VERSION" ]; then
@@ -55,6 +69,42 @@ if ! [[ $email =~ $emailregex ]] ; then
     exit 1
 fi
 
+echo ""
+echoblue "                                               "
+echoblue "  Ticketz - Site oficial https://ticke.tz      "
+echoblue "                                               "
+echoblue "  Contato Whatsapp: +55 49 99981 2291          "
+echoblue "                    https://wa.me/554999812291 "
+echoblue "                                               "
+
+if [ "$BRANCH" = "" ] ; then
+   echo ""
+   echored "                                               "
+   echored "  Você está instalando o Ticketz Opensource    "
+   echored "                                               "
+   echored "  O Ticketz Opensource é um sistema de código  "
+   echored "  aberto, disponível gratuitamente a partir    "
+   echored "  da página do projeto: https://ticke.tz       "
+   echored "                                               "
+   echored "  O Ticketz Opensource não pode ser vendido!   "
+   echored "                                               "
+   echored "  Se alguém te cobrou algo por este sistema    "
+   echored "  é recomendado que solicite reembolso por     "
+   echored "  se tratar de uma cobrança indevida.          "
+   echored "                                               "
+   echored "  Por ser um sistema opensource você pode      "
+   echored "  prosseguir com a instalação mesmo assim e    "
+   echored "  conhecer o sistema.                          "
+   echored "                                               "
+   echored "  Aperte CTRL-C para cancelar                  "
+   echored "                                               "
+   echored "  A instalação irá prosseguir em 30 segundos   "
+   echored "                                               "
+   echo ""
+   sleep 30
+   echo "Prosseguindo..."
+fi
+
 # salva pasta atual
 CURFOLDER=${PWD}
 
@@ -98,12 +148,18 @@ cat example.env-backend \
   | sed -e "s/^BACKEND_PATH=.*/BACKEND_PATH=$backend_path/g"  \
   | sed -e "s/^FRONTEND_HOST=.*/FRONTEND_HOST=$frontend_host/g" \
   | sed -e "s/^EMAIL_ADDRESS=.*/EMAIL_ADDRESS=$email/g"  > .env-backend
-
+  
 cat example.env-frontend \
   | sed -e "s/^BACKEND_HOST=.*/BACKEND_HOST=$backend_host/g" \
   | sed -e "s/^BACKEND_PATH=.*/BACKEND_PATH=$backend_path/g" \
   | sed -e "s/^FRONTEND_HOST=.*/FRONTEND_HOST=$frontend_host/g" \
   | sed -e "s/^EMAIL_ADDRESS=.*/EMAIL_ADDRESS=$email/g" > .env-frontend
+
+cat >> .env-frontend << EOF
+
+SETUP_SYSTEM=get.ticke.tz
+
+EOF
 
 ## inclui configuração para o acme-companion se o backend tiver host a parte
 [ -z "$backend_path" ] && cat >> .env-backend << EOF
@@ -117,7 +173,49 @@ EOF
 
 DIDRESTORE=""
 
-latest_backup_file=$(ls -t ${CURFOLDER}/ticketz-backup-*.tar.gz 2>/dev/null | head -n 1)
+## baixa todos os componentes
+docker compose pull
+
+if [ -f ${CURFOLDER}/retrieved_data.tar.gz ]; then
+   echo "Dados de importação encotrados, iniciando o processo de carga..."
+
+   [ -d retrieve ] || mkdir retrieve
+   cp ${CURFOLDER}/retrieved_data.tar.gz retrieve
+   
+   tmplog=/tmp/loadretrieved-$$-${RANDOM}
+   echo "" | docker compose run --rm -T -v ${PWD}/retrieve:/retrieve backend &> ${tmplog}-retrieve.log
+   
+   if [ $? -gt 0 ] ; then
+      echo -e "\n\nErro ao carregar dados de retrieved_data.tar.gz.\n\nLog de erros pode ser encontrado em ${tmplog}-retrieve.log\n\n"
+      exit 1
+   fi
+   
+   if [ -f ${CURFOLDER}/public_data.tar.gz ]; then
+      echo "Encontrado arquivo com dados para a pasta public, iniciando processo de restauração..."
+      
+      docker volume create --name ticketz-docker-acme_backend_public &> ${tmplog}-createpublic.log
+      
+      if [ $? -gt 0 ]; then
+         echo -e "\n\nErro ao criar volume public\n\nLog de erros pode ser encontrado em ${tmplog}-createpublic.log\n\n"
+         exit 1
+      fi
+      
+      cat ${CURFOLDER}/public_data.tar.gz | docker run -i --rm -v ticketz-docker-acme_backend_public:/public alpine ash -c "tar -xzf - -C /public" &> ${tmplog}-restorepublic.log
+
+      if [ $? -gt 0 ]; then
+         echo -e "\n\nErro ao restaurar volume public\n\nLog de erros pode ser encontrado em ${tmplog}-restorepublic.log\n\n"
+         exit 1
+      fi
+      
+   fi
+   
+   # Evita restaurar backup após carga de dados, embora pouco provável
+   DIDRESTORE=1
+fi
+
+if ! [ "${DIDRESTORE}" ]; then
+    latest_backup_file=$(ls -t ${CURFOLDER}/ticketz-backup-*.tar.gz 2>/dev/null | head -n 1)
+fi
 
 if [ -n "${latest_backup_file}" ] && ! [ -d "backups" ]; then
     echo "Backup encontrado. Preparando para restauração..."
@@ -160,6 +258,12 @@ EOF
 [ "${DIDRESTORE}" ] || cat << EOF
 
 O login é ${email} e a senha é 123456
+
+EOF
+
+[ "${DIDRESTORE}" ] && cat << EOF
+
+Dados foram restaurados, logins e senhas são as mesmas do sistema de origem.
 
 EOF
 
