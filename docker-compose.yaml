@@ -209,6 +209,9 @@ services:
   n8n:
     image: docker.n8n.io/n8nio/n8n
     container_name: n8n
+    restart: always
+    depends_on:
+      - acme-companion
     env_file:
       - .env-integrations
       - .env-secrets
