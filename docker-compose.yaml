@@ -64,7 +64,6 @@ services:
       - .env-backend
     restart: always
     depends_on:
-      - acme-companion
       - postgres
       - redis
     networks:
@@ -141,6 +140,8 @@ services:
     image: minio/minio
     command: server /data --console-address ":9001"
     restart: always
+    depends_on:
+      - acme-companion
     env_file:
       - .env-integrations
       - .env-secrets
@@ -179,6 +180,7 @@ services:
     restart: always
     depends_on:
       - postgres
+      - acme-companion
     extra_hosts:
       - 'host.docker.internal:host-gateway'
     env_file:
@@ -193,6 +195,8 @@ services:
   typebot-viewer:
     image: baptistearno/typebot-viewer:latest
     restart: always
+    depends_on:
+      - acme-companion
     env_file:
       - .env-integrations
       - .env-secrets
@@ -205,6 +209,9 @@ services:
   n8n:
     image: docker.n8n.io/n8nio/n8n
     container_name: n8n
+    restart: always
+    depends_on:
+      - acme-companion
     env_file:
       - .env-integrations
       - .env-secrets
