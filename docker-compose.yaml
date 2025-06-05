@@ -6,7 +6,8 @@ volumes:
   postgres_data:
   backend_public:
   backend_private:
-    
+  minio_data:
+
 services:
 
   backend:
@@ -80,3 +81,64 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
     command: --interval 1800 --cleanup
     restart: unless-stopped
+
+  minio:
+    image: minio/minio
+    command: server /data --console-address ":9001"
+    restart: always
+    env_file:
+      - .env-integrations
+      - .env-secrets
+      - .env-minio
+    expose:
+      - 9000
+      - 9001
+    volumes:
+      - minio_data:/data
+    networks:
+      - ticketz
+
+  # This service just makes sure a bucket with the right policies is created
+  createbuckets:
+    image: minio/mc
+    env_file:
+      - .env-integrations
+      - .env-secrets
+      - .env-minio
+    depends_on:
+      - minio
+    entrypoint: >
+      /bin/sh -c "
+      sleep 10;
+      /usr/bin/mc config host add minio http://minio:9000 \$\{MINIO_ROOT_USER} \$\{MINIO_ROOT_PASSWORD};
+      /usr/bin/mc mb minio/typebot;
+      /usr/bin/mc anonymous set public minio/typebot/public;
+      exit 0;
+      "
+    networks:
+      - ticketz
+
+  typebot-builder:
+    image: baptistearno/typebot-builder:latest
+    restart: always
+    depends_on:
+      - postgres
+    extra_hosts:
+      - 'host.docker.internal:host-gateway'
+    env_file:
+      - .env-integrations
+      - .env-secrets
+      - .env-typebot-common
+      - .env-typebot-builder
+    networks:
+      - ticketz
+
+  typebot-viewer:
+    image: baptistearno/typebot-viewer:latest
+    restart: always
+    env_file:
+      - .env-integrations
+      - .env-secrets
+      - .env-typebot-common
+    networks:
+      - ticketz
