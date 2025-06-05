@@ -28,6 +28,7 @@ services:
     image: ghcr.io/ticketz-oss/ticketz-frontend:pro
     volumes:
       - backend_public:/var/www/backend-public
+      - ./confs/frontend-ticketz.d:/etc/nginx/ticketz.d
     env_file:
       - .env-frontend
     restart: always
