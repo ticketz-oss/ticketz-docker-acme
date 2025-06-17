@@ -53,7 +53,7 @@ services:
       - nginx-proxy
 
   backend:
-    image: ghcr.io/ticketz-oss/ticketz-backend:pro-head
+    image: ghcr.io/ticketz-oss/ticketz-backend:pro-i18n
     volumes:
       - backend_public:/usr/src/app/public
       - backend_private:/usr/src/app/private
@@ -68,7 +68,7 @@ services:
       - nginx-proxy
 
   frontend:
-    image: ghcr.io/ticketz-oss/ticketz-frontend:pro-head
+    image: ghcr.io/ticketz-oss/ticketz-frontend:pro-i18n
     volumes:
       - backend_public:/var/www/backend-public
     env_file:
