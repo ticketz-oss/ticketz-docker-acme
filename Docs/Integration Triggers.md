@@ -106,7 +106,8 @@ anterior ou um array com vários objetos de mensagens.
   "message": {
     "type": "text",
     "content": "conteúdo da mensagem"
-  }}}
+  }
+}
 ```
 
 ### Transferência de Fila
@@ -225,5 +226,69 @@ colocando ele logo antes de um campo texto.
 ```json
 {
   "action": "ping"
+}
+```
+
+### Adicionar uma tag no ticket
+
+Este comando adiciona uma tag no ticket.
+
+```json
+{
+  "action": "addTag",
+  "tagId": <número da tag>
+}
+```
+
+### Remover uma tag do ticket
+
+Este comando remove uma tag do ticket.
+
+```json
+{
+  "action": "removeTag",
+  "tagId": <número da tag>
+}
+```
+
+### Limpar tags do ticket
+
+Este comando remove todas as tags do ticket (CUIDADO!)
+
+```json
+{
+  "action": "clearTags"
+}
+```
+
+### Adicionar uma tag no contato
+
+Este comando adiciona uma tag no contato.
+
+```json
+{
+  "action": "addContactTag",
+  "tagId": <número da tag>
+}
+```
+
+### Remover uma tag do contato
+
+Este comando remove uma tag do contato.
+
+```json
+{
+  "action": "removeContactTag",
+  "tagId": <número da tag>
+}
+```
+
+### Limpar tags do contato
+
+Este comando remove todas as tags do contato (CUIDADO!)
+
+```json
+{
+  "action": "clearContactTags"
 }
 ```
