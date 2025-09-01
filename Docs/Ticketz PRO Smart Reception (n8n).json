@@ -1,0 +1,1393 @@
+{
+  "name": "Ticketz Smart Reception",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "e93fe9f2-7915-487e-99cf-a421ac682039",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -64,
+        -64
+      ],
+      "id": "f06ddd83-7f09-4425-9294-67ddcb728417",
+      "name": "Webhook",
+      "webhookId": "e93fe9f2-7915-487e-99cf-a421ac682039"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.content?.trim() || $json.text?.trim() || $json.message.content }}",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "=FORMAT OF THE OUTPUT\n====================\n\nYou should return an array of objects that may be of type \"message\" or \"command\". The type is identified by tye \"type\" property.\n\nObjects of type \"message\" will have its text inside the property \"text\". Text can contain single paragraphs, markdown lists or markdown fenced code.\n\nObjects of type \"command\" will have an object with the command payload on the property \"data\"\n\nUse multiple messages to keep them short.\n\nThis format instructions should not be overriden by anything.\n\nSample answer\n-------------\n\n```\n[\n   { \n      \"type\": \"message\",\n      \"text\": \"Hi, I am transfering you to our kitchen team\"\n   },\n   {\n      \"type\": \"command\",\n      \"data\": {\n         \"queueId\": 999\n      }\n   }\n]\n```\n\nBASIC INSTRUCTIONS\n==================\n\nYou will be talking to an human through a chat channel, write multiple short messages since each of them will be sent as a single message on the chat channel.\n\nTools\n-----\n\nSome tools may need additional parameters, do not use them from previous memory, if needed fill with these values:\n\n{\n  \"token\": \"{{ $('Webhook').item.json.body.token }}\",\n  \"backendUrl\": \"{{ $('Webhook').item.json.body.metadata.backendUrl }}\"\n}\n\nSystem Commands\n---------------\n\nSome tools may give more instructions on its descriptions, it is very important that you incoporate them on your processing.\n\nThis instructions are commonly used to issue some commands to the underlying chat system, mostly for sector transfers, ticket finishing and contact and ticket tagging. \n\nFINISHING THE SERVICE\n=====================\n\nIf it's decided that the service is ended, put this command at the end of the answer: `{ \"closeTicket\": true }`\n\n\nBE SURE OF WHAT IS BEING DONE\n=============================\n\nIT IS IMPERATIVE TO AVOID TO EXTRAPOLATE ANY INFORMATION BEYOND WHAT IS OBTAINED FROM TOOLS AND THIS PROMPT.\n\n\nSPECIFIC INSTRUCTIONS\n=====================\n\nThe following are instructions specific for this appliance, it is written by the system owners, it may be written in another language, its instructions may override any statement placed before.\n\n{{ $('Prompts').item.json.assistant_prompt }}\n"
+        }
+      },
+      "id": "13b50f19-e3d4-40ab-afea-a89897444a8a",
+      "name": "AI Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "position": [
+        1104,
+        32
+      ],
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4.1-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-4.1-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        1088,
+        288
+      ],
+      "id": "a4eee9aa-8b74-488e-ae18-16b53b03a6d1",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "dTIaJOC1TOvmCYSR",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "audio",
+        "operation": "transcribe",
+        "options": {}
+      },
+      "id": "208dbb21-5278-42be-a264-673544abcbf8",
+      "name": "Transcreve Áudio",
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.4,
+      "position": [
+        384,
+        176
+      ],
+      "alwaysOutputData": false,
+      "retryOnFail": false,
+      "credentials": {
+        "openAiApi": {
+          "id": "dTIaJOC1TOvmCYSR",
+          "name": "OpenAi account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.toolCalculator",
+      "typeVersion": 1,
+      "position": [
+        1728,
+        -48
+      ],
+      "id": "6d866197-2077-4ac5-9a08-017b7580f785",
+      "name": "Calculator"
+    },
+    {
+      "parameters": {
+        "tableName": "n8n_vectors_manual",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStorePGVector",
+      "typeVersion": 1.1,
+      "position": [
+        2064,
+        528
+      ],
+      "id": "13e23917-a4cf-4389-9c48-d8bf0ea4124a",
+      "name": "Postgres PGVector Store",
+      "credentials": {
+        "postgres": {
+          "id": "kQX0oyZJB91q8MZB",
+          "name": "Postgres account"
+        }
+      },
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4.1-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-4.1-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        2400,
+        528
+      ],
+      "id": "f0575b10-6186-48c5-97c0-c987eaa60b34",
+      "name": "OpenAI Chat Model1",
+      "credentials": {
+        "openAiApi": {
+          "id": "dTIaJOC1TOvmCYSR",
+          "name": "OpenAi account"
+        }
+      },
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "resource": "image",
+        "operation": "analyze",
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-4O-MINI"
+        },
+        "text": "={{ $('Prompts').item.json.image_prompt }}",
+        "inputType": "=data",
+        "options": {}
+      },
+      "id": "f7ed1781-9474-4f6b-8d45-4ca11009b27f",
+      "name": "Analisa Imagem",
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.4,
+      "position": [
+        384,
+        352
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "dTIaJOC1TOvmCYSR",
+          "name": "OpenAi account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "d5c825da-007b-4b4e-88e8-0f8a1210335c",
+              "leftValue": "={{ ($json.content?.trim() || $json.text?.trim())?.length > 0 || !!$('Extract document information').item.json.message.content }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        880,
+        192
+      ],
+      "id": "f06f4a89-9d3a-4acc-b19a-5e32826ba721",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "d5c825da-007b-4b4e-88e8-0f8a1210335c",
+              "leftValue": "={{ \n\n[\"text\"].includes($json.messageType)\n\n&& !!$('Dados coletados').item.json.content.trim()\n\n}}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        864,
+        -64
+      ],
+      "id": "02e339d7-ea6e-4d95-b61d-a4190aac05bf",
+      "name": "Test content"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "7538fcec-c9a7-4a8f-af57-10b4622dbf6f",
+              "leftValue": "={{ $('Webhook').item.json.body.mediaUrl }}",
+              "rightValue": "^https?://",
+              "operator": {
+                "type": "string",
+                "operation": "regex"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -288,
+        464
+      ],
+      "id": "e6683e08-ce8d-4483-9f53-76b8783eb36a",
+      "name": "Test media file"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "=[{\n  \"type\": \"text\",\n  \"content\": \"Não consigo entender esse tipo de arquivo.\"\n}]",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        352,
+        1056
+      ],
+      "id": "90d553da-d8dc-48c6-87f9-0186b98409c1",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "=[{\n  \"type\": \"text\",\n  \"content\": \"Não consegui analisar, tente novamente por favor.\"\n}]",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        912,
+        1040
+      ],
+      "id": "d5305572-e155-444d-9443-cec68da87423",
+      "name": "Respond to Webhook2"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "=[{\n  \"type\": \"text\",\n  \"content\": \"Não consigo analisar esse tipo de mensagem.\"\n}]",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        64,
+        1056
+      ],
+      "id": "a0ed2138-01cf-43e2-9949-b6f74ffa535f",
+      "name": "Respond to Webhook3"
+    },
+    {
+      "parameters": {
+        "content": "# Finalizações sem sucesso",
+        "height": 280,
+        "width": 1104,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -32,
+        960
+      ],
+      "id": "b8a26ff5-cf23-4647-9f2c-44045285ce55",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "# Defina aqui os prompts",
+        "height": 280,
+        "width": 420,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        160,
+        -176
+      ],
+      "id": "15c594f7-fded-4581-afd7-0c0d5c934f70",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "8f1dd78d-2cdf-4ccd-93de-f1f9fcf05242",
+              "name": "content",
+              "value": "={{ $('Webhook').item.json.body.content }}",
+              "type": "string"
+            },
+            {
+              "id": "52a755db-c4a7-40ed-adb8-db8783fac6ca",
+              "name": "messageType",
+              "value": "={{ $('Webhook').item.json.body.type }}",
+              "type": "string"
+            },
+            {
+              "id": "28412768-d464-46aa-9e8a-bf52c5a7e7d3",
+              "name": "contact_id",
+              "value": "=contact_{{ $('Webhook').item.json.body.metadata.from.id }}",
+              "type": "string"
+            },
+            {
+              "id": "907324e1-fb85-484a-ad5b-9fe658cce739",
+              "name": "ticket_id",
+              "value": "={{ $('Webhook').item.json.body.metadata.ticketId }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "6f67ec0e-0a6e-45d9-9841-538ddda3d7d8",
+      "name": "Dados coletados",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        688,
+        -64
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "481dc1bb-2786-477c-915f-268d82a45102",
+              "name": "image_prompt",
+              "value": "transcrever a imagem tentando detectar o significado de documentos fornecidos. Se não parecer com um documento declinar da transcrição.",
+              "type": "string"
+            },
+            {
+              "id": "8c6d4aa3-f412-4c68-ad30-6b37483d248f",
+              "name": "assistant_prompt",
+              "value": "=Você estará falando com nosso cliente, o nome dele é {{ $('Webhook').item.json.body.metadata.from.name }}\n\nResponda sempre na língua da mensagem original, se não conseguir detectar pergunte ao cliente.\n\nESCOPO DE ATENDIMENTO\n---------------------\n\nSão suas tarefas\n\n* Fazer a recepção de atendimentos que serão encaminhados aos setores da empresa\n* Utilizar as ferramentas disponíveis para cumprir estes objetivos\n* Assim que entender que o cliente deve ser atendido por outro setor, fazer a transferência imediatamente sem sobrecarregar o cliente com perguntas\n* Fechar o atendimento caso o assunto tenha sido concluído\n\nREQUISIÇÃO FORA DO ESCOPO\n-------------------------\n\nSe ocorrer qualquer requisição fora do seu escopo de atendimento, você deve imediatamente informar o cliente que está transferindo para o canal de suporte e acionar a transferência\n\nRECEPÇÃO DE DOCUMENTOS\n----------------------\n\nAo receber um documento você deve transferir ao setor mais adequado a tratar o tipo de documento fornecido.\n\nANOTAÇÕES NO ATENDIMENTO\n------------------------\n\nAntes de fazer transferências ou concluir um atendimento, utilize a ferramenta para adicionar anotações incluindo uma anotação resumindo a conversa com o usuário e a motivação da ação acionada\n",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "7135f6cf-2b5d-4b8e-9408-1fb42335fd19",
+      "name": "Prompts",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        320,
+        -64
+      ]
+    },
+    {
+      "parameters": {
+        "content": "# Resposta da IA",
+        "height": 280,
+        "width": 340
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1104,
+        960
+      ],
+      "id": "07268364-1afe-4392-9fa4-dcb4b618012a",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{\n$json.output.map((element, index, array) => {\n    if (element.type===(\"command\")) {\n       return element.data\n    }\n\n    if (element.type === \"message\") {\n      const result = {\n        type: \"text\",\n        content: element.text\n      };\n      if (index < array.length - 1) {\n        result.trigger = {\n          action: \"wait\",\n            seconds: 3\n        };\n      }\n      return result;\n    }\n  })\n}}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1232,
+        1040
+      ],
+      "id": "43be7460-3402-48a3-9732-c63f694dc629",
+      "name": "Segmenta e responde"
+    },
+    {
+      "parameters": {
+        "url": "={{ $('Webhook').item.json.body.mediaUrl }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -16,
+        304
+      ],
+      "id": "1695fba7-c90d-4040-be0f-d41904c4e767",
+      "name": "Baixa arquivo"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.messageType }}",
+                    "rightValue": "audio",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "9a97b6ff-4106-4311-8633-2bdb779694b5"
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "03190a4b-eaed-4848-a9ab-8e614ba3fa69",
+                    "leftValue": "={{ $json.messageType }}",
+                    "rightValue": "image",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "d4dbff8c-99e2-4798-b08c-7b2021071ba6",
+                    "leftValue": "={{  $('Baixa arquivo').item.binary.data.mimeType }}",
+                    "rightValue": "application/pdf",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "60c02c12-6eed-4250-a757-c004ee11b5d3",
+                    "leftValue": "={{ true }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "boolean",
+                      "operation": "true",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        160,
+        304
+      ],
+      "id": "34859302-53b8-4e25-ad3b-7f3b9475696c",
+      "name": "Detecta tipo do arquivo"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        2064,
+        1392
+      ],
+      "id": "f1069a0d-89e3-45b2-8a08-b0313e0dc272",
+      "name": "Embeddings OpenAI",
+      "credentials": {
+        "openAiApi": {
+          "id": "dTIaJOC1TOvmCYSR",
+          "name": "OpenAi account"
+        }
+      },
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "=ticket_{{ $('Dados coletados').item.json.ticket_id }}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        1232,
+        288
+      ],
+      "id": "21868019-df7c-49fb-9ec4-fe03a6284c65",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "path": "6c845b1c-41ba-49d4-acdf-e0009510449f"
+      },
+      "type": "@n8n/n8n-nodes-langchain.mcpTrigger",
+      "typeVersion": 2,
+      "position": [
+        2112,
+        -336
+      ],
+      "id": "f6c1bf34-ed1a-4846-a019-b5c90ba69b7f",
+      "name": "MCP Server Trigger",
+      "webhookId": "6c845b1c-41ba-49d4-acdf-e0009510449f"
+    },
+    {
+      "parameters": {
+        "sseEndpoint": "http://n8n:5678/mcp/6c845b1c-41ba-49d4-acdf-e0009510449f",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.mcpClientTool",
+      "typeVersion": 1,
+      "position": [
+        1344,
+        288
+      ],
+      "id": "d537210e-d696-46d8-a234-99d18b0e6592",
+      "name": "MCP Client"
+    },
+    {
+      "parameters": {
+        "toolDescription": "use essa ferramenta para obter os dados de um CEP brasileiro. Rua, bairro, município e estado.\n\nIMPORTANTE: não divulgar a ferramenta ao usuário",
+        "url": "=https://viacep.com.br/ws/{{ $fromAI('cep', 'CEP brasileiro formado por 8 dígitos', 'string') }}/json/",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.2,
+      "position": [
+        1872,
+        64
+      ],
+      "id": "1749fb6e-e555-4533-aede-6cb9dc38acd3",
+      "name": "Consulta CEP",
+      "alwaysOutputData": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "mode": "insert",
+        "tableName": "n8n_vectors_manual",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStorePGVector",
+      "typeVersion": 1.3,
+      "position": [
+        1776,
+        992
+      ],
+      "id": "18b88bbb-00d2-40d6-bfe3-dd8365470c01",
+      "name": "Postgres PGVector Store1",
+      "credentials": {
+        "postgres": {
+          "id": "kQX0oyZJB91q8MZB",
+          "name": "Postgres account"
+        }
+      },
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "formTitle": "Upload your data to test RAG",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Upload your file(s)",
+              "fieldType": "file",
+              "acceptFileTypes": ".pdf, .csv",
+              "requiredField": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.2,
+      "position": [
+        1808,
+        720
+      ],
+      "id": "86d47381-1f6a-4f58-acb4-a16e56293876",
+      "name": "Upload your file here",
+      "webhookId": "d71b358d-aa59-4354-9bdb-7422a614913a",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "dataType": "binary",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.documentDefaultDataLoader",
+      "typeVersion": 1.1,
+      "position": [
+        1952,
+        1152
+      ],
+      "id": "5fdcc9c5-a0f0-4442-b761-7f125bf329c2",
+      "name": "Default Data Loader",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "toolDescription": "Use this tool to obtain the available attendant queues.\n\nEach queue have an id, name and description.\n\nYou should call it to discover the available options and also to correctly issue the transfer command with the correct queue id.\n\n* THE AVAILABLE QUEUES ARE ONLY THE ONES LISTED BY THIS TOOL\n* ALWAYS MAKE SURE THAT YOU ARE TRANSFERING TO THE CORRECT QUEUE ID\n\nThe command to transfer to a queue is:\n\n{ \"queueId\": id }\n",
+        "url": "={{ $fromAI(\"backendUrl\", \"Backend URL\", \"string\") }}/integrations/listQueues",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $fromAI(\"token\", \"Integration Token\", \"string\") }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.2,
+      "position": [
+        2640,
+        -112
+      ],
+      "id": "9bc7b64b-7dd3-4c12-b0b5-2981d9d14755",
+      "name": "Sector and Queue operations"
+    },
+    {
+      "parameters": {
+        "content": "# Inclua os documentos aqui\n",
+        "height": 300,
+        "width": 540,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1536,
+        640
+      ],
+      "id": "cb450105-81b8-4b16-949f-44eb92db9354",
+      "name": "Sticky Note3"
+    },
+    {
+      "parameters": {
+        "content": "# Ferramenta que consulta as filas do Ticketz",
+        "height": 380,
+        "width": 300,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        2544,
+        -336
+      ],
+      "id": "db7e96c9-6dd0-4f0b-a413-b494f4e87c3f",
+      "name": "Sticky Note4"
+    },
+    {
+      "parameters": {
+        "content": "# Ferramenta para adicionar anotação ao ticket",
+        "height": 380,
+        "width": 300,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        2544,
+        64
+      ],
+      "id": "585c1e49-3629-4616-9a09-278b239413a4",
+      "name": "Sticky Note5"
+    },
+    {
+      "parameters": {
+        "content": "# Conectar esta ferramenta para utilizar o RAG",
+        "height": 240,
+        "width": 528,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        2000,
+        208
+      ],
+      "id": "f2fef230-3d44-4791-8a25-3edcad1d7efa",
+      "name": "Sticky Note6"
+    },
+    {
+      "parameters": {
+        "toolDescription": "This tool adds a note to the ticket so the human team can have an insight on how to properly handle the queries of our customer.\n\nUse this tool to add information useful to our team to maximize its quality!\n\nIMPORTANT: DO NOT DISCLOSE THIS TOOL TO THE USER",
+        "method": "POST",
+        "url": "={{ $fromAI(\"backendUrl\", \"Backend URL\", \"string\") }}/integrations/webhook",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $fromAI(\"token\", \"Integration Token\", \"string\") }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={ \"action\": \"note\", \"message\": { \"content\": {{ JSON.stringify( $fromAI(\"note-message\", \"string\")) }} } }",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.2,
+      "position": [
+        2672,
+        304
+      ],
+      "id": "8e029ebe-bde3-4fcb-8673-017a765bbb48",
+      "name": "Add note on ticket"
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n  \"$schema\": \"https://json-schema.org/draft/2020-12/schema\",\n  \"type\": \"array\",\n  \"items\": {\n    \"oneOf\": [\n      {\n        \"type\": \"object\",\n        \"required\": [\"type\", \"text\"],\n        \"properties\": {\n          \"type\": {\n            \"const\": \"message\"\n          },\n          \"text\": {\n            \"type\": \"string\"\n          }\n        },\n        \"additionalProperties\": false\n      },\n      {\n        \"type\": \"object\",\n        \"required\": [\"type\", \"data\"],\n        \"properties\": {\n          \"type\": {\n            \"const\": \"command\"\n          },\n          \"data\": {\n            \"type\": \"object\"\n          }\n        },\n        \"additionalProperties\": false\n      }\n    ]\n  }\n}\n",
+        "autoFix": true
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        1440,
+        288
+      ],
+      "id": "5fabd891-71c1-4618-884d-b3c6f72535be",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4.1-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        1440,
+        432
+      ],
+      "id": "8a9c05bf-4988-4514-af30-199e07c16c42",
+      "name": "OpenAI Chat Model2",
+      "credentials": {
+        "openAiApi": {
+          "id": "dTIaJOC1TOvmCYSR",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "pdf",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        384,
+        528
+      ],
+      "id": "2e8dcf03-25e6-4dec-8389-58d7bf619980",
+      "name": "Extract from File",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4.1-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-4.1-MINI"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=You're an intelligent bot that is great at extracting data from text. \n\nYou need to identify what is the document about and list important data from it in a textual markdown response.",
+              "role": "system"
+            },
+            {
+              "content": "=Here's the document you need to extract the right information from:\n{{ $json.text }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        352,
+        720
+      ],
+      "id": "a5b3843b-c6d8-4d6b-bbe8-2bb938e0dce2",
+      "name": "Extract document information",
+      "credentials": {
+        "openAiApi": {
+          "id": "dTIaJOC1TOvmCYSR",
+          "name": "OpenAi account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "name": "docs",
+        "description": "Documentação para auxiliar o atendimento - utilize estes manuais para tentar ajudar o cliente antes de transferir para um setor"
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolVectorStore",
+      "typeVersion": 1,
+      "position": [
+        2128,
+        336
+      ],
+      "id": "46d5e869-2d75-4959-81df-83a5af8152d9",
+      "name": "Documentação",
+      "disabled": true
+    }
+  ],
+  "pinData": {
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "host": "n8n.ticke.tz",
+            "x-real-ip": "144.22.131.252",
+            "x-forwarded-for": "144.22.131.252",
+            "x-forwarded-host": "n8n.ticke.tz",
+            "x-forwarded-proto": "https",
+            "x-forwarded-ssl": "on",
+            "x-forwarded-port": "443",
+            "x-original-uri": "/webhook/e93fe9f2-7915-487e-99cf-a421ac682039",
+            "content-length": "902",
+            "accept": "application/json, text/plain, */*",
+            "content-type": "application/json",
+            "user-agent": "axios/1.9.0",
+            "accept-encoding": "gzip, compress, deflate, br"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "type": "document",
+            "content": "document",
+            "mediaUrl": "https://arm.ticke.tz/backend/public/media/463/3163/QjajPg0jBN/wwgo-invoice-847.pdf",
+            "token": "is-QdAGBxjK0mdM1PuKhCyb1arXlfRX31KF",
+            "metadata": {
+              "channel": "whatsapp",
+              "from": {
+                "id": 493324,
+                "name": "Claudemir Todo Bom",
+                "number": "554999812291",
+                "email": "@Claudemir Todo Bom",
+                "profilePicUrl": null,
+                "profileHiresPictureUrl": "",
+                "channel": "whatsapp",
+                "isGroup": false,
+                "disableBot": false,
+                "presence": "available",
+                "companyId": 463,
+                "createdAt": "2025-07-16T20:03:27.512Z",
+                "updatedAt": "2025-07-16T20:03:27.512Z",
+                "tags": [],
+                "extraInfo": []
+              },
+              "ticketId": 3163,
+              "customPayload": {
+                "type": "document",
+                "fileUrl": "https://lookaside.fbsbx.com/whatsapp_business/attachments/?mid=731001082881784&ext=1752936474&hash=ARmfbc2HaLiJq0B3lc49ET1XoHA6FQgt9RosEGa2CVwX_Q",
+                "fileMimeType": "application/pdf",
+                "fileName": "wwgo-invoice-847.pdf",
+                "caption": null
+              },
+              "backendUrl": "https://arm.ticke.tz/backend"
+            }
+          },
+          "webhookUrl": "https://n8n.ticke.tz/webhook/e93fe9f2-7915-487e-99cf-a421ac682039",
+          "executionMode": "production"
+        }
+      }
+    ]
+  },
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Prompts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Segmenta e responde",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Transcreve Áudio": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond to Webhook2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Calculator": {
+      "ai_tool": [
+        [
+          {
+            "node": "MCP Server Trigger",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres PGVector Store": {
+      "ai_vectorStore": [
+        [
+          {
+            "node": "Documentação",
+            "type": "ai_vectorStore",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Documentação",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Analisa Imagem": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond to Webhook2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond to Webhook2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Test content": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Test media file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Test media file": {
+      "main": [
+        [
+          {
+            "node": "Baixa arquivo",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond to Webhook3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Dados coletados": {
+      "main": [
+        [
+          {
+            "node": "Test content",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prompts": {
+      "main": [
+        [
+          {
+            "node": "Dados coletados",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Baixa arquivo": {
+      "main": [
+        [
+          {
+            "node": "Detecta tipo do arquivo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Detecta tipo do arquivo": {
+      "main": [
+        [
+          {
+            "node": "Transcreve Áudio",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Analisa Imagem",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Extract from File",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings OpenAI": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Postgres PGVector Store",
+            "type": "ai_embedding",
+            "index": 0
+          },
+          {
+            "node": "Postgres PGVector Store1",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "MCP Client": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Consulta CEP": {
+      "ai_tool": [
+        [
+          {
+            "node": "MCP Server Trigger",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload your file here": {
+      "main": [
+        [
+          {
+            "node": "Postgres PGVector Store1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Default Data Loader": {
+      "ai_document": [
+        [
+          {
+            "node": "Postgres PGVector Store1",
+            "type": "ai_document",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sector and Queue operations": {
+      "ai_tool": [
+        [
+          {
+            "node": "MCP Server Trigger",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Add note on ticket": {
+      "ai_tool": [
+        [
+          {
+            "node": "MCP Server Trigger",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model2": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Structured Output Parser",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from File": {
+      "main": [
+        [
+          {
+            "node": "Extract document information",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond to Webhook2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract document information": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond to Webhook2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Documentação": {
+      "ai_tool": [
+        []
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "d9403f04-2251-4e49-97f2-7de16a361989",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "bcd2aa20555003a2d933360c8360a2c0aa0db37d85c83d3ac93d40d774715b9e"
+  },
+  "id": "AecCNjrog8aV8txI",
+  "tags": []
+}
