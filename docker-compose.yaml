@@ -1,7 +1,6 @@
 networks:
   ticketz:
   nginx-proxy:
-  n8n:
 
 volumes:
   ngx_conf:
@@ -219,5 +218,5 @@ services:
     volumes:
       - n8n_data:/home/node/.n8n
     networks:
-      - n8n
+      - ticketz
       - nginx-proxy
