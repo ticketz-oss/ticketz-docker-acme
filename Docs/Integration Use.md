@@ -25,7 +25,12 @@ qual driver cada uma esteja utilizando, inclusive é válido para o chatbot
 interno ou outras automações que vierem a ser implementadas no futuro.
 
 
+O endpoint abaixo retorna um json com a lista de filas disponíveis para
+uso pela integração:
+
+``${BACKEND_URL}/integrations/listQueues``
+
+
 Mais detalhes podem ser vistos nos guias específicos de cada integração:
 
 * [Uso do Typebot](Integration%20Use%20Typebot.md)
-* [Uso do Webhook/N8N](Integration%20Use%20Webhook.md)
