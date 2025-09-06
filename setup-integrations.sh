@@ -70,21 +70,24 @@ fi
 . .env-backend
 . .env-integrations
 
+S3_ACCESS_KEY=$(head -c 24 /dev/urandom | base64)
+S3_SECRET_KEY=$(head -c 24 /dev/urandom | base64)
+
 cat << EOF > .env-secrets
 ## ARQUIVO GERADO AUTOMATICAMENTE
 ## Mexa apenas se tiver certeza absoluta do que está fazendo...
 ## se puder não mexa mesmo tendo certeza
 
-S3_ACCESS_KEY=$(head -c 24 /dev/urandom | base64)
-S3_SECRET_KEY=$(head -c 24 /dev/urandom | base64)
+S3_ACCESS_KEY=${S3_ACCESS_KEY}
+S3_SECRET_KEY=${S3_SECRET_KEY}
 
 FRONTEND_HOST=${FRONTEND_HOST}
 EMAIL_ADDRESS=${EMAIL_ADDRESS}
 
 TYPEBOT_ENCRYPTION_SECRET=$(openssl rand -base64 24)
 
-MINIO_ROOT_CLIENT_ID=$(head -c 24 /dev/urandom | base64)
-MINIO_ROOT_CLIENT_SECRET=$(head -c 24 /dev/urandom | base64)
+MINIO_ROOT_CLIENT_ID=${S3_ACCESS_KEY}
+MINIO_ROOT_CLIENT_SECRET=${S3_SECRET_KEY}
 EOF
 
 
