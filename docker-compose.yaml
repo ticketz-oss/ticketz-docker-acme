@@ -179,6 +179,7 @@ services:
     depends_on:
       - postgres
       - acme-companion
+      - minio
     extra_hosts:
       - 'host.docker.internal:host-gateway'
     env_file:
@@ -195,6 +196,7 @@ services:
     restart: always
     depends_on:
       - acme-companion
+      - minio
     env_file:
       - .env-integrations
       - .env-secrets
