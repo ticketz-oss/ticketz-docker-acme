@@ -18,8 +18,8 @@ raso com valores `string`, `number` ou `boolean`, não são suporta
 estrururas complexas como arrays e objetos.
 
 O fluxo pode ser feito normalmente, o Ticketz suporta a bolha "Botões"
-do Typebot porém o Ticketz a entragará como opções numeradas para o
-contato da conversa.
+do Typebot e o menu será renderizado conforme os recursos do canal
+sendo utilizado e das preferências definidas nas configurações.
 
 Também é suportado o elemento "Wait" para aguardar um tempo, embora
 seja desaconselhado o seu uso pois o contato pode acabar a vir escrevendo

@@ -110,6 +110,32 @@ anterior ou um array com vários objetos de mensagens.
 }
 ```
 
+### Envio de mensagem com menu de opções
+
+Envia uma mensagem seguida de um menu de opções. O menu será
+renderizado conforme os recursos do canal sendo utilizado e das
+preferências definidas nas configurações.
+
+Para esse tipo de envio o atributo `message` não pode ser um array.
+
+```json
+{
+  "message": {
+    "type": "text",
+    "content": "Uma mensagem"
+  },
+  "action": "menu",
+  "menuOptions": [
+    {
+      "text": "Opção 1"
+    },
+    {
+      "text": "Opção 2"
+    }
+  ]
+}
+```
+
 ### Transferência de Fila
 
 Transfere o ticket para outra fila, caso a nova fila não seja atendida
