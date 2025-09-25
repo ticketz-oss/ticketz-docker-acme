@@ -150,8 +150,8 @@ esse tipo de mensagem (por enquanto apenas Notificamehub Whatsapp Oficial)
   "action": "menu",
   "menuOptions": [
     {
-      "text": "Olha isso!",
-      "url": "https://ww.inf.br"
+      "text": "Ticketz PRO",
+      "url": "https://pro.ticke.tz"
     }
   ]
 }
