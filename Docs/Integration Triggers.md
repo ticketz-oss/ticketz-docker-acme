@@ -136,6 +136,27 @@ Para esse tipo de envio o atributo `message` não pode ser um array.
 }
 ```
 
+### Envio de mensagem com botão de URL
+
+Envia uma mensagem com botão de URL, exclusiva para canais que suportam
+esse tipo de mensagem (por enquanto apenas Notificamehub Whatsapp Oficial)
+
+```json
+{
+  "message": {
+    "type": "text",
+    "content": "Clique no botão abaixo para conhecer mais sobre o nosso produto"
+  },
+  "action": "menu",
+  "menuOptions": [
+    {
+      "text": "Olha isso!",
+      "url": "https://ww.inf.br"
+    }
+  ]
+}
+```
+
 ### Transferência de Fila
 
 Transfere o ticket para outra fila, caso a nova fila não seja atendida
