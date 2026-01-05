@@ -280,10 +280,13 @@ colocando ele logo antes de um campo texto.
 
 Este comando adiciona uma tag no ticket.
 
+O parâmetro `advanceOnly` é opcional, quando definido como verdadeiro ele impede que uma tag de funil substitua uma outra tag do mesmo funil que esteja em nível mais avançado.
+
 ```json
 {
   "action": "addTag",
-  "tagId": <número da tag>
+  "tagId": <número da tag>,
+  "advanceOnly": true
 }
 ```
 
@@ -312,10 +315,14 @@ Este comando remove todas as tags do ticket (CUIDADO!)
 
 Este comando adiciona uma tag no contato.
 
+
+O parâmetro `advanceOnly` é opcional, quando definido como verdadeiro ele impede que uma tag de funil substitua uma outra tag do mesmo funil que esteja em nível mais avançado.
+
 ```json
 {
   "action": "addContactTag",
-  "tagId": <número da tag>
+  "tagId": <número da tag>,
+  "advanceOnly": true
 }
 ```
 
