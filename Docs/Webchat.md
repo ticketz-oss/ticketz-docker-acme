@@ -41,7 +41,6 @@ Adicione este código no final do arquivo HTML do seu website, antes de `</body>
 
 ```html
 <script>
-  window.WebchatPath = '/webchat.html';
   window.WebchatChannelId = 'seu-channel-id-aqui';
 </script>
 <script src="https://seu-ticketz.com/webchat-fab.js" async></script>
@@ -75,6 +74,8 @@ Ao carregar o `webchat.html`, você pode passar parâmetros adicionais:
 | `lang` | Idioma (pt, en, es, fr, de, id, it) | Detectado automaticamente |
 | `primary` | Cor primária (#RRGGBB) | Padrão vem do painel |
 | `secondary` | Cor secundária (#RRGGBB) | Padrão vem do painel |
+| `surface` | Cor de fundo (#RRGGBB) | Padrão: branco |
+| `text` | Cor de texto (#RRGGBB) | Padrão: escuro |
 
 **Exemplo com personalização:**
 
@@ -82,7 +83,7 @@ Ao carregar o `webchat.html`, você pode passar parâmetros adicionais:
 <script>
   window.WebchatChannelId = 'seu-channel-id';
 </script>
-<script src="https://seu-ticketz.com/webchat-fab.js?title=Suporte&lang=pt&primary=%230066CC" async></script>
+<script src="https://seu-ticketz.com/webchat-fab.js?title=Suporte&lang=pt&primary=%230066CC&secondary=%234DB8FF&surface=%23FFFFFF&text=%23333333" async></script>
 ```
 
 ### Idiomas Disponíveis
