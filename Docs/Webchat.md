@@ -18,18 +18,19 @@ O **Webchat** é um widget flutuante que permite que seus clientes iniciem conve
 
 ## Configuração no Ticketz
 
-### Criar um Canal Webchat
+### Criar uma Conexão Webchat
 
 1. Acesse o **Painel Administrativo** do Ticketz
-2. Vá para **Canais** → **Novo Canal**
-3. Selecione **Webchat** como tipo de canal
+2. Vá para **Conexões** → **Nova Conexão**
+3. Selecione **Webchat** como tipo de conexão
 4. Configure:
-   - **Nome**: Nome do canal (ex: `webchat-principal`)
+   - **Nome**: Nome descritivo (ex: `webchat-principal`)
    - **Título da Janela**: Texto exibido no topo (ex: `Atendimento Online`)
    - **Subtítulo da Janela**: Descrição breve (ex: `Responderemos em breve`)
-   - **Cor Primária**: Cor do botão (ex: `#0066CC`)
+   - **Cor Primária**: Cor do botão FAB (ex: `#0066CC`)
+   - **Cor Secundária**: Cor de destaque (ex: `#00AA00`)
 
-Após salvar, você receberá um **Channel ID** (um código único). Copie este ID para usar na integração.
+Após salvar, você receberá um **ID da Conexão** (um código único). Copie este ID para usar na integração.
 
 ---
 
@@ -41,14 +42,14 @@ Adicione este código no final do arquivo HTML do seu website, antes de `</body>
 
 ```html
 <script>
-  window.WebchatChannelId = 'seu-channel-id-aqui';
+  window.WebchatChannelId = 'seu-id-conexao-aqui';
 </script>
 <script src="https://seu-ticketz.com/webchat-fab.js" async></script>
 ```
 
 **Substitua:**
 - `seu-ticketz.com` → URL da sua instalação do Ticketz (ex: `chat.suaempresa.com`)
-- `seu-channel-id-aqui` → Channel ID copiado do painel
+- `seu-id-conexao-aqui` → ID da Conexão copiado do painel
 
 Pronto! Um botão flutuante aparecerá automaticamente no canto inferior direito da página.
 
@@ -56,35 +57,43 @@ Pronto! Um botão flutuante aparecerá automaticamente no canto inferior direito
 
 ## Personalização
 
-Você pode personalizar o Webchat adicionando parâmetros antes de carregá-lo:
+### Método 1: Via Painel (Recomendado)
 
-### Parâmetros da Janela (via Painel)
+Ao criar ou editar a **Conexão Webchat** no painel, configure:
 
-As cores e títulos podem ser definidos no painel do Ticketz ao criar/editar o canal. Elas serão aplicadas automaticamente.
+| Campo | Descrição | Exemplo |
+|-------|-----------|----------|
+| **Título da Janela** | Título exibido no topo do chat | `Suporte Online` |
+| **Subtítulo da Janela** | Descrição breve | `Equipe disponível 24/7` |
+| **Cor Primária** | Cor do botão e elementos principais | `#0066CC` |
+| **Cor Secundária** | Cor de destaques e bordas | `#00AA00` |
 
-### Parâmetros via URL (webchat.html)
+Essas configurações serão aplicadas automaticamente e sobrescrevem os padrões do sistema.
 
-Ao carregar o `webchat.html`, você pode passar parâmetros adicionais:
+### Método 2: Via Parâmetros de URL (Opcional)
 
-| Parâmetro | Descrição | Alternativas |
-|-----------|-----------|---|
-| `channel` | ID do canal | Essencial |
-| `title` | Título customizado | Padrão vem do painel |
-| `subtitle` | Subtítulo customizado | Padrão vem do painel |
-| `lang` | Idioma (pt, en, es, fr, de, id, it) | Detectado automaticamente |
-| `primary` | Cor primária (#RRGGBB) | Padrão vem do painel |
-| `secondary` | Cor secundária (#RRGGBB) | Padrão vem do painel |
-| `surface` | Cor de fundo (#RRGGBB) | Padrão: branco |
-| `text` | Cor de texto (#RRGGBB) | Padrão: escuro |
+Você pode sobrescrever a personalização do painel adicionando parâmetros na URL:
 
-**Exemplo com personalização:**
+| Parâmetro | Descrição | Formato |
+|-----------|-----------|----------|
+| `title` | Título da janela | `title=Suporte` |
+| `subtitle` | Subtítulo | `subtitle=Equipe%20Online` |
+| `lang` | Idioma da interface | `lang=pt` (pt, en, es, fr, de, id, it) |
+| `primary` | Cor primária | `primary=%230066CC` (hex RGB com %) |
+| `secondary` | Cor secundária | `secondary=%2300AA00` |
+| `surface` | Cor de fundo | `surface=%23FFFFFF` |
+| `text` | Cor de texto | `text=%23333333` |
+
+**Exemplo com personalização via URL:**
 
 ```html
 <script>
-  window.WebchatChannelId = 'seu-channel-id';
+  window.WebchatChannelId = 'seu-id-conexao';
 </script>
-<script src="https://seu-ticketz.com/webchat-fab.js?title=Suporte&lang=pt&primary=%230066CC&secondary=%234DB8FF&surface=%23FFFFFF&text=%23333333" async></script>
+<script src="https://seu-ticketz.com/webchat-fab.js?title=Suporte&lang=pt&primary=%230066CC&secondary=%2300AA00" async></script>
 ```
+
+**Dica:** Cores via URL sobrescrevem as do painel. Nem todos os parâmetros são necessários.
 
 ### Idiomas Disponíveis
 
@@ -105,7 +114,7 @@ O Webchat detecta automaticamente o idioma do navegador. Idiomas suportados:
 ### O chat não aparece?
 
 1. Verifique a URL do seu Ticketz está acessível
-2. Confirme que o Channel ID é exato (copie novamente do painel)
+2. Confirme que o ID da Conexão é exato (copie novamente do painel)
 3. Abra o Console do navegador (F12) e procure por erros
 4. Verifique na aba **Network** se `webchat-fab.js` está sendo carregado com sucesso
 
