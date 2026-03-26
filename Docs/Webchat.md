@@ -65,14 +65,39 @@ Ao criar ou editar a **Conexão Webchat** no painel, configure:
 |-------|-----------|----------|
 | **Título da Janela** | Título exibido no topo do chat | `Suporte Online` |
 | **Subtítulo da Janela** | Descrição breve | `Equipe disponível 24/7` |
+| **Mensagem de Chamada (CTA)** | Texto curto exibido ao lado do ícone flutuante | `Fale com a gente` |
 | **Cor Primária** | Cor do botão e elementos principais | `#0066CC` |
 | **Cor Secundária** | Cor de destaques e bordas | `#00AA00` |
 
 Essas configurações serão aplicadas automaticamente e sobrescrevem os padrões do sistema.
 
-### Método 2: Via Parâmetros de URL (Opcional)
+### Método 2: Via Variáveis Globais (Opcional)
 
-Você pode sobrescrever a personalização do painel adicionando parâmetros na URL:
+Você pode sobrescrever o comportamento visual direto na página com variáveis `window`:
+
+| Variável | Descrição | Valor padrão |
+|-----------|-----------|----------|
+| `window.WebchatCtaMessage` | Sobrescreve a mensagem de chamada (CTA) do painel | Vazio (usa painel) |
+| `window.WebchatFabPulseEnabled` | Ativa/desativa pulsação do botão | `true` |
+| `window.WebchatFabPulseDuration` | Duração da animação (em segundos) | `0.3` |
+| `window.WebchatFabPulseScale` | Escala máxima da pulsação | `1.05` |
+
+**Exemplo com sobrescrita por variáveis:**
+
+```html
+<script>
+  window.WebchatChannelId = 'seu-id-conexao';
+  window.WebchatCtaMessage = 'Atendimento imediato';
+  window.WebchatFabPulseEnabled = true;
+  window.WebchatFabPulseDuration = 0.3;
+  window.WebchatFabPulseScale = 1.05;
+</script>
+<script src="https://seu-ticketz.com/webchat-fab.js" async></script>
+```
+
+### Método 3: Via URL do webchat (Opcional)
+
+Para ajustes da janela interna do chat, você pode informar parâmetros no `WebchatPath`:
 
 | Parâmetro | Descrição | Formato |
 |-----------|-----------|----------|
@@ -84,16 +109,17 @@ Você pode sobrescrever a personalização do painel adicionando parâmetros na 
 | `surface` | Cor de fundo | `surface=%23FFFFFF` |
 | `text` | Cor de texto | `text=%23333333` |
 
-**Exemplo com personalização via URL:**
+**Exemplo com parâmetros na URL do webchat:**
 
 ```html
 <script>
   window.WebchatChannelId = 'seu-id-conexao';
+  window.WebchatPath = '/webchat.html?lang=pt&primary=%230066CC&secondary=%2300AA00&surface=%23FFFFFF&text=%23333333';
 </script>
-<script src="https://seu-ticketz.com/webchat-fab.js?title=Suporte&lang=pt&primary=%230066CC&secondary=%2300AA00" async></script>
+<script src="https://seu-ticketz.com/webchat-fab.js" async></script>
 ```
 
-**Dica:** Cores via URL sobrescrevem as do painel. Nem todos os parâmetros são necessários.
+**Dica:** Configuração da Conexão no painel é a base. Variáveis `window` e parâmetros de URL sobrescrevem quando informados.
 
 ### Idiomas Disponíveis
 
