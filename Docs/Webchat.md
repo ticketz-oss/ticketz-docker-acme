@@ -24,11 +24,15 @@ O **Webchat** é um widget flutuante que permite que seus clientes iniciem conve
 2. Vá para **Conexões** → **Nova Conexão**
 3. Selecione **Webchat** como tipo de conexão
 4. Configure:
-   - **Nome**: Nome descritivo (ex: `webchat-principal`)
-   - **Título da Janela**: Texto exibido no topo (ex: `Atendimento Online`)
-   - **Subtítulo da Janela**: Descrição breve (ex: `Responderemos em breve`)
-   - **Cor Primária**: Cor do botão FAB (ex: `#0066CC`)
-   - **Cor Secundária**: Cor de destaque (ex: `#00AA00`)
+  - **Nome**: Nome descritivo da conexão (ex: `webchat-principal`)
+  - **Channel UUID / ID da Conexão**: Identificador único (gerado automaticamente)
+  - **Título da Janela**: Texto exibido no topo do chat (ex: `Atendimento Online`)
+  - **Subtítulo da Janela**: Descrição breve (ex: `Responderemos em breve`)
+  - **Mensagem de Chamada (CTA)**: Texto exibido ao lado do botão flutuante (ex: `Fale com a gente`)
+  - **Cor Primária**: Cor principal do botão e destaques (ex: `#0066CC`)
+  - **Cor Secundária**: Cor secundária de apoio (ex: `#00AA00`)
+  - **Cor de Fundo (Surface)**: Fundo da janela do chat (ex: `#FFFFFF`)
+  - **Cor de Texto (Text)**: Cor principal dos textos (ex: `#0F172A`)
 
 Após salvar, você receberá um **ID da Conexão** (um código único). Copie este ID para usar na integração.
 
@@ -63,13 +67,24 @@ Ao criar ou editar a **Conexão Webchat** no painel, configure:
 
 | Campo | Descrição | Exemplo |
 |-------|-----------|----------|
+| **Channel UUID / ID da Conexão** | Identificador único da conexão (somente leitura) | `a1b2c3d4-...` |
 | **Título da Janela** | Título exibido no topo do chat | `Suporte Online` |
 | **Subtítulo da Janela** | Descrição breve | `Equipe disponível 24/7` |
 | **Mensagem de Chamada (CTA)** | Texto curto exibido ao lado do ícone flutuante | `Fale com a gente` |
 | **Cor Primária** | Cor do botão e elementos principais | `#0066CC` |
 | **Cor Secundária** | Cor de destaques e bordas | `#00AA00` |
+| **Cor de Fundo (Surface)** | Cor de fundo da janela de chat | `#FFFFFF` |
+| **Cor de Texto (Text)** | Cor principal dos textos | `#0F172A` |
 
-Essas configurações serão aplicadas automaticamente e sobrescrevem os padrões do sistema.
+Essas configurações são a forma mais indicada para administração do dia a dia.
+
+Como priorizar no painel:
+
+1. Defina o **Título** e **Subtítulo** para o contexto de atendimento.
+2. Use a **Mensagem de Chamada (CTA)** para aumentar cliques no botão.
+3. Ajuste **Cor Primária** e **Cor Secundária** para combinar com a marca.
+
+Resultado: o widget já sai padronizado para todos os sites que usam essa Conexão.
 
 ### Método 2: Via Variáveis Globais (Opcional)
 
@@ -79,8 +94,8 @@ Você pode sobrescrever o comportamento visual direto na página com variáveis 
 |-----------|-----------|----------|
 | `window.WebchatCtaMessage` | Sobrescreve a mensagem de chamada (CTA) do painel | Vazio (usa painel) |
 | `window.WebchatFabPulseEnabled` | Ativa/desativa pulsação do botão | `true` |
-| `window.WebchatFabPulseDuration` | Duração da animação (em segundos) | `0.3` |
-| `window.WebchatFabPulseScale` | Escala máxima da pulsação | `1.05` |
+| `window.WebchatFabPulseDuration` | Duração da animação (em segundos) | `0.5` |
+| `window.WebchatFabPulseScale` | Escala máxima da pulsação | `1.1` |
 
 **Exemplo com sobrescrita por variáveis:**
 
@@ -89,11 +104,13 @@ Você pode sobrescrever o comportamento visual direto na página com variáveis 
   window.WebchatChannelId = 'seu-id-conexao';
   window.WebchatCtaMessage = 'Atendimento imediato';
   window.WebchatFabPulseEnabled = true;
-  window.WebchatFabPulseDuration = 0.3;
-  window.WebchatFabPulseScale = 1.05;
+  window.WebchatFabPulseDuration = 0.5;
+  window.WebchatFabPulseScale = 1.1;
 </script>
 <script src="https://seu-ticketz.com/webchat-fab.js" async></script>
 ```
+
+**Observação:** a pulsação é configurada por variáveis (`window`) e não pelo painel da Conexão. Os defaults atuais são duração `0.5s` e escala `1.1`.
 
 ### Método 3: Via URL do webchat (Opcional)
 
