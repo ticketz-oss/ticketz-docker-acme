@@ -112,6 +112,37 @@ CURFOLDER=${PWD}
 # Passo 2: Instala o docker / apenas se já não tiver instalado
 which docker > /dev/null || curl -sSL https://get.docker.com | sh
 
+# Passo 2.1: Garante que o userland-proxy do Docker está desabilitado
+# Sem isso, o docker-proxy mascara o IP real do cliente nos logs do nginx
+ensure_docker_no_userland_proxy() {
+  local cfg=/etc/docker/daemon.json
+  local needs_restart=0
+
+  if [ ! -f "$cfg" ]; then
+    echo '{"userland-proxy": false}' > "$cfg"
+    needs_restart=1
+  elif ! python3 -c "import json,sys; d=json.load(open('$cfg')); sys.exit(0 if d.get('userland-proxy') is False else 1)" 2>/dev/null; then
+    python3 - <<'PYEOF'
+import json
+cfg = '/etc/docker/daemon.json'
+try:
+    d = json.load(open(cfg))
+except Exception:
+    d = {}
+d['userland-proxy'] = False
+open(cfg, 'w').write(json.dumps(d, indent=2) + '\n')
+PYEOF
+    needs_restart=1
+  fi
+
+  if [ "$needs_restart" = "1" ]; then
+    echo "Configurando Docker para uso de iptables puro (sem userland-proxy)..."
+    systemctl restart docker
+    echo "Docker reiniciado."
+  fi
+}
+ensure_docker_no_userland_proxy
+
 # Passo 3: Baixa o projeto e entra na pasta
 [ -d ticketz-docker-acme ] || git clone https://github.com/ticketz-oss/ticketz-docker-acme.git
 cd ticketz-docker-acme
