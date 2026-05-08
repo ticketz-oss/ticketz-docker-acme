@@ -23,6 +23,8 @@ services:
     ports:
       - "80:80"
       - "443:443"
+      - "[::]:80:80"
+      - "[::]:443:443"
     volumes:
       - ngx_conf:/etc/nginx/conf.d
       - ngx_vhost:/etc/nginx/vhost.d
