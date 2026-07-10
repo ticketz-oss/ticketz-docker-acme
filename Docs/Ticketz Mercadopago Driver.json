@@ -1,0 +1,1205 @@
+{
+  "name": "Ticketz Mercadopago Driver",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "ticketz-mercadopago",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "d1d7da69-a8bd-4c6f-becb-386ffb96b3e1",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        -1520,
+        544
+      ],
+      "webhookId": "ticketz-payment-gateway-no-code"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "cond-auth",
+              "leftValue": "={{ $('Webhook').item.json.headers.authorization }}",
+              "rightValue": "=Bearer {{ $json.auth_token }}",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "b40bfae1-4aa5-457e-b0e5-2fae234dbad4",
+      "name": "Auth OK?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -768,
+        544
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ success: false, errorCode: 'ERR_UNAUTHORIZED', errorMessage: 'ERR_UNAUTHORIZED' }) }}",
+        "options": {
+          "responseCode": 401
+        }
+      },
+      "id": "4688aaa0-dfd7-41c2-8774-2efef43538d4",
+      "name": "Reject Auth",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        -768,
+        784
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const body = $('Webhook').first().json.body;\nconst operation = body.operation;\n\nreturn [{\n  json: {\n    operation: operation || '',\n    hasOperation: !!operation,\n    body\n  }\n}];"
+      },
+      "id": "c3de94c3-9457-41d9-b7b5-aa0efea9207f",
+      "name": "Read Operation",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -576,
+        544
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "cond-has-operation",
+              "leftValue": "={{ $json.hasOperation }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "f85548a6-84a5-4c44-bb0e-e906aa88cc17",
+      "name": "Has Operation?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -368,
+        544
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ success: false, errorCode: 'ERR_EXTERNAL_INVALID_REQUEST', errorMessage: 'Missing operation.' }) }}",
+        "options": {}
+      },
+      "id": "3cb6073b-335a-4807-bf82-751e3fc4c2a2",
+      "name": "Reject Missing Op",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        -368,
+        800
+      ]
+    },
+    {
+      "parameters": {
+        "dataType": "string",
+        "value1": "={{ $json.operation }}",
+        "rules": {
+          "rules": [
+            {
+              "value2": "create"
+            },
+            {
+              "value2": "webhook"
+            },
+            {
+              "value2": "checkStatus"
+            },
+            {
+              "value2": "getDriverDetails"
+            },
+            {
+              "value2": "expire"
+            },
+            {
+              "value2": "noop"
+            }
+          ]
+        },
+        "fallbackOutput": 5
+      },
+      "id": "cf3bfb1b-8a15-456a-84f3-3772392f8d3c",
+      "name": "Switch",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 2,
+      "position": [
+        -176,
+        544
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ success: false, errorCode: 'ERR_EXTERNAL_INVALID_OPERATION', errorMessage: 'Unsupported operation: ' + $json.operation }) }}",
+        "options": {}
+      },
+      "id": "f503e8a9-9e14-4068-9996-d2594a4e81b0",
+      "name": "Reject Unknown Op",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        -96,
+        960
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const body = $input.first().json.body;\nconst idempotencyKey = body.idempotencyKey || `${body.operation}-${body.invoiceId}`;\nreturn [{ json: { idempotencyKey, body } }];"
+      },
+      "id": "cba7ee27-0fbb-4462-9290-89046ad1fe39",
+      "name": "Build Cache Key",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        128,
+        -208
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "17c65b1a-8ef5-4644-bde6-a268e9fa72ab",
+              "leftValue": "={{ !!$json.createData }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "83b0951e-8e83-40a0-a0ca-fcc9160c62d6",
+      "name": "Cache Exists?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        528,
+        -208
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({\n  success: true,\n  status: $json?.status === \"processed\" ? \"paid\" : ( [\"canceled\", \"failed\", \"charged_back\", \"refunded\", \"expired\"].includes($json.transactions.payments[0].status) ? \"expired\" : \"ignored\")\n}) }}",
+        "options": {}
+      },
+      "id": "84085857-b05a-4e50-8c2c-bd62e6ba3e0e",
+      "name": "Respond to Ticketz",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        480,
+        864
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "{\n  \"auth_token\": \"teste\"\n}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1136,
+        544
+      ],
+      "id": "b0172013-26dc-40b8-b19b-4a9fc329791e",
+      "name": "Auth Token"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"success\": true,\n  \"fields\": [\n    {\n      \"name\": \"providerApiKey\",\n      \"title\": \"Provider API Key\",\n      \"description\": \"API key used to authenticate with the external provider.\",\n      \"type\": \"text\",\n      \"lgWidth\": 12,\n      \"required\": true\n    },\n    {\n      \"name\": \"providerAccountId\",\n      \"title\": \"Provider Account ID\",\n      \"description\": \"Account identifier returned by the provider.\",\n      \"type\": \"text\",\n      \"lgWidth\": 12,\n      \"required\": true\n    },\n    {\n      \"name\": \"providerCertFile\",\n      \"title\": \"Provider Certificate\",\n      \"description\": \"Private certificate file sent as base64 on every RPC call.\",\n      \"type\": \"file\",\n      \"lgWidth\": 12,\n      \"required\": false,\n      \"extra\": {\n        \"file\": {\n          \"accept\": \".pem,.crt,.key\",\n          \"private\": true\n        }\n      }\n    }\n  ]\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        672,
+        1200
+      ],
+      "id": "5be123ba-0938-42ba-97bc-5841f40f59ad",
+      "name": "Sample supported fields",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"success\": true,\n  \"fields\": [\n    {\n      \"name\": \"mercadoPago_accessToken\",\n      \"title\": \"Access Token\",\n      \"description\": \"Chave de API do Mercado Pago\",\n      \"type\": \"text\",\n      \"lgWidth\": 12,\n      \"required\": true\n    },\n    {\n      \"name\": \"mercadoPago_pixExpiryMinutes\",\n      \"title\": \"Minutos de validade do PIX\",\n      \"description\": \"Validade do PIX em minutos\",\n      \"type\": \"number\",\n      \"lgWidth\": 6,\n      \"required\": false\n    },\n    {\n      \"name\": \"mercadoPago_sandbox\",\n      \"title\": \"Sandbox\",\n      \"description\": \"Use sandbox for testing\",\n      \"type\": \"checkbox\",\n      \"lgWidth\": 6,\n      \"required\": true\n    }\n  ],\n  \"modes\": [\"pix\", \"boleto\"],\n  \"operations\": [\n    \"create\",\n    \"webhook\",\n    \"checkStatus\",\n    \"getDriverDetails\"\n  ]\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        352,
+        1200
+      ],
+      "id": "9c526939-c520-4c09-b597-6bead34c0c0f",
+      "name": "Config options for Mercadopago"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "propertyName": "createData",
+        "key": "=mp-create-{{ $json.idempotencyKey }}",
+        "keyType": "string",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        336,
+        -208
+      ],
+      "id": "8cec9494-a4ad-409d-ae8a-aae794198f80",
+      "name": "get-create-cache",
+      "credentials": {
+        "redis": {
+          "id": "zcc2Ys4HpSt54PQT",
+          "name": "Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('Webhook').item.json.body.paymentMethod }}",
+                    "rightValue": "boleto",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "69ef4073-fe5e-45b0-9956-95fbb09c427d"
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "590c55b1-a209-4505-918d-7adaf0debaeb",
+                    "leftValue": "={{ $('Webhook').item.json.body.paymentMethod }}",
+                    "rightValue": "pix",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        720,
+        -96
+      ],
+      "id": "4b611dec-8f0e-412c-ba64-68c40f9f7e78",
+      "name": "Switch1"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.mercadopago.com/v1/orders",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('Webhook').item.json.body.currentSettings._externalmercadoPago_accessToken }}"
+            },
+            {
+              "name": "X-Idempotency-Key",
+              "value": "={{ $('Build Cache Key').item.json.idempotencyKey }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{\nJSON.stringify(\n\n{\n  \"type\": \"online\",\n  \"external_reference\": `Invoice${$('Webhook').item.json.body.company.id}`,\n  \"transactions\": {\n    \"payments\": [\n      {\n      \"amount\": String($('Webhook').item.json.body.price),\n      \"payment_method\": {\n          \"id\": \"boleto\",\n          \"type\": \"ticket\"\n        },\n        \"expiration_time\": `P${Math.round((new Date($('Webhook').item.json.body.company.dueDate) - new Date()) / 86400000)+1}D`\n      }\n    ]\n  },\n  \"payer\": {\n    \"email\": $('Webhook').item.json.body.currentSettings._externalmercadoPago_sandbox ? \"test@testuser.com\" : $('Webhook').item.json.body.company.email,\n    \"first_name\": $('Webhook').item.json.body.company.fiscalData.name.split(\" \")[0],\n    \"last_name\": $('Webhook').item.json.body.company.fiscalData.name.split(\" \").slice(1).join(\" \") || $('Webhook').item.json.body.company.fiscalData.name.split(\" \")[0],\n    \"identification\": {\n      \"type\": $('Webhook').item.json.body.company.fiscalData.document.length==11 ? \"CPF\" : \"CNPJ\",\n      \"number\": $('Webhook').item.json.body.company.fiscalData.document\n    },\n    \"address\": {\n      \"zip_code\": $('Webhook').item.json.body.company.fiscalData.postalCode,\n      \"street_name\": $('Webhook').item.json.body.company.fiscalData.address,\n      \"street_number\": $('Webhook').item.json.body.company.fiscalData.addressNumber,\n      \"neighborhood\": $('Webhook').item.json.body.company.fiscalData.province || \".\",\n      \"state\": $('Webhook').item.json.body.company.fiscalData.state,\n      \"city\": $('Webhook').item.json.body.company.fiscalData.city,\n      \"complement\": \".\"\n    }\n  },\n  \"total_amount\": String($('Webhook').item.json.body.price),\n  \"processing_mode\": \"automatic\"\n}\n, null, 2)\n}}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        944,
+        -192
+      ],
+      "id": "fc603547-b818-4bac-942a-7f1b7d5ad593",
+      "name": "emite boleto",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "set",
+        "key": "=mp-create-{{ $('Webhook').item.json.body.idempotencyKey }}",
+        "value": "={{ JSON.stringify($json.createData, null, 2) }}",
+        "keyType": "string"
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        1456,
+        -112
+      ],
+      "id": "ab1c3133-d5b3-4a6b-939a-1e73798f0ebd",
+      "name": "Redis",
+      "credentials": {
+        "redis": {
+          "id": "zcc2Ys4HpSt54PQT",
+          "name": "Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "try {\n  return { createData: {\n    \"success\": true,\n    \"paymentMethod\": \"boleto\",\n    \"txId\": $input.first().json.id,\n    \"value\": Number($input.first().json.total_amount),\n    \"boletoUrl\": $input.first().json.transactions.payments[0].payment_method.ticket_url,\n    \"boletoBarcode\": $input.first().json.transactions.payments[0].payment_method.barcode_content,\n    \"expireAt\": new Date(new Date($input.first().json.transactions.payments[0].date_of_expiration).getTime() - 3 * 60 * 60 * 1000).toISOString().slice(0,10),\n    \"payGwData\": { \"externalId\": $input.first().json.id }\n  }}\n\n} catch {\n  return { createData: { success: false } }\n}\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1216,
+        -288
+      ],
+      "id": "43d2b782-217a-441e-a614-525cec9dd87a",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify($json.createData, null, 2) }}",
+        "options": {}
+      },
+      "id": "9a33441c-876a-416f-ab48-a73804c7039e",
+      "name": "Respond to Ticketz2",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        1600,
+        -352
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "return { createData: JSON.parse($input.first().json.createData) }"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        720,
+        -352
+      ],
+      "id": "05d63d46-1afc-474f-bdd0-d456e213f9d8",
+      "name": "Code in JavaScript1"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.mercadopago.com/v1/orders",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('Webhook').item.json.body.currentSettings._externalmercadoPago_accessToken }}"
+            },
+            {
+              "name": "X-Idempotency-Key",
+              "value": "={{ $('Build Cache Key').item.json.idempotencyKey }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{\nJSON.stringify(\n\n{\n  \"type\": \"online\",\n  \"external_reference\": `Invoice${$('Webhook').item.json.body.company.id}`,\n  \"transactions\": {\n    \"payments\": [\n      {\n      \"amount\": String($('Webhook').item.json.body.price),\n      \"payment_method\": {\n          \"id\": \"pix\",\n          \"type\": \"bank_transfer\"\n        },\n        \"expiration_time\": `PT${Math.max(Math.floor(Number($('Webhook').item.json.body.currentSettings._externalmercadoPago_pixExpiryMinutes) || 15, 15))}M`\n      }\n    ]\n  },\n  \"payer\": {\n    \"email\": $('Webhook').item.json.body.currentSettings._externalmercadoPago_sandbox ? \"test@testuser.com\" : $('Webhook').item.json.body.company.email,\n    \"first_name\": $('Webhook').item.json.body.company.fiscalData.name.split(\" \")[0]\n  },\n  \"total_amount\": String($('Webhook').item.json.body.price),\n  \"processing_mode\": \"automatic\"\n}\n, null, 2)\n}}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        944,
+        16
+      ],
+      "id": "95e0aa1c-cc1e-45b0-b52b-c9b9b9e86d8b",
+      "name": "emite pix"
+    },
+    {
+      "parameters": {
+        "jsCode": "try {\n  return { createData: {\n    \"success\": true,\n    \"paymentMethod\": \"pix\",\n    \"txId\": $input.first().json.id,\n    \"value\": Number($input.first().json.total_amount),\n    \"qrcode\": { \"qrcode\": $input.first().json.transactions.payments[0].payment_method.qr_code },\n    \"expireAt\": $input.first().json.transactions.payments[0].date_of_expiration,\n    \"payGwData\": { \"externalId\": $input.first().json.id }\n  }}\n\n} catch {\n  return { createData: { success: false } }\n}\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1168,
+        16
+      ],
+      "id": "c710989f-8c24-471b-bb9d-b9ec8f4861eb",
+      "name": "Code in JavaScript2"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"success\": true,\n  \"status\": \"ignored\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        560,
+        576
+      ],
+      "id": "f63e777b-6bf2-4cfe-a0ca-58180b46578c",
+      "name": "ignora"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"success\": true,\n  \"status\": \"paid\",\n  \"txId\": \"{{ $json.body.webhookBody.data.id }}\",\n  \"value\": {{ $json.body.webhookBody.data.total_paid_amount }}\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        560,
+        432
+      ],
+      "id": "d7dc399f-5257-4a71-a26f-76165c9dfe3c",
+      "name": "retorna pagamento"
+    },
+    {
+      "parameters": {
+        "content": "# Criação da cobrança",
+        "height": 688,
+        "width": 1664
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        48,
+        -496
+      ],
+      "id": "76753412-a614-469a-abf4-6d853c8d3137",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "# Processamento do webhook",
+        "height": 512,
+        "width": 432
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        256,
+        224
+      ],
+      "id": "5c76c98c-f404-4774-88c7-88889d2120c2",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "content": "# Opções de configuração",
+        "height": 288,
+        "width": 368
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        256,
+        1104
+      ],
+      "id": "799e35fc-e18c-4c39-ad07-b4ec58911fbc",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        368,
+        1536
+      ],
+      "id": "528c9b1c-3d7d-496d-b768-151155dcd727",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "content": "# Cancelar Cobrança (inativo)",
+        "height": 224,
+        "width": 368
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        256,
+        1456
+      ],
+      "id": "7a2f47c3-e7a1-4084-9f01-375d3c1a931e",
+      "name": "Sticky Note3"
+    },
+    {
+      "parameters": {
+        "content": "# Token de autenticação",
+        "height": 272,
+        "width": 272
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -1216,
+        448
+      ],
+      "id": "898550fb-5ce3-409e-a8f4-77b85e5254b1",
+      "name": "Sticky Note4"
+    },
+    {
+      "parameters": {
+        "jsCode": "try {\n  const message = $input.first().json.error.message;\n  const messageDecoded = message.startsWith('402 - \"') ? JSON.parse(JSON.parse(message.substr(6))) : null\n\n  return { createData: {\n    \"success\": false,\n    \"errorCode\": $input.first().json.error.status,\n    \"errorMessage\": messageDecoded.data.transactions.payments[0].status_detail\n  }}\n  \n} catch (error) {\n  return { createData: { error: error.message, success: false, errorCode: 500, errorMessage: \"Internal error\" } }\n}\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1216,
+        -128
+      ],
+      "id": "b7127872-9673-4327-adb4-3d6dcd00d2d1",
+      "name": "Code in JavaScript3"
+    },
+    {
+      "parameters": {
+        "url": "=https://api.mercadopago.com/v1/orders/{{ $('Webhook').item.json.body.txId }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('Webhook').item.json.body.currentSettings._externalmercadoPago_accessToken }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        288,
+        864
+      ],
+      "id": "232d2916-babf-4518-94f7-c59b887fec47",
+      "name": "consulta pagamento"
+    },
+    {
+      "parameters": {
+        "content": "# Verifica cobrança",
+        "height": 288,
+        "width": 368
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        256,
+        768
+      ],
+      "id": "6683eb07-ed83-4ca8-b4a4-40e7ddb5d169",
+      "name": "Sticky Note5"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "041aaed3-7871-4c26-b0f0-01abe7fb2c22",
+                    "leftValue": "={{ $json.body.webhookBody.action }}",
+                    "rightValue": "order.canceled",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.body.webhookBody.action === \"order.processed\" && Number($json.body.webhookBody.data.total_paid_amount >= Number($json.body.webhookBody.data.total_amount) ) }}",
+                    "rightValue": "order.processed",
+                    "operator": {
+                      "type": "boolean",
+                      "operation": "true",
+                      "singleValue": true
+                    },
+                    "id": "c59852b9-9f55-4b0f-bb6d-cdee269cfe0f"
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "extra"
+        }
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        304,
+        416
+      ],
+      "id": "ed13da57-7608-48cb-881d-c2fe45184241",
+      "name": "Switch2"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"success\": true,\n  \"status\": \"expired\",\n  \"txId\": \"{{ $json.body.webhookBody.data.id }}\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        560,
+        288
+      ],
+      "id": "d8554ed9-c587-469d-bc17-c99042ee7116",
+      "name": "cancela cobrança"
+    }
+  ],
+  "pinData": {
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "host": "n8n.ticketz.pro",
+            "x-real-ip": "189.4.111.205",
+            "x-forwarded-for": "189.4.111.205",
+            "x-forwarded-host": "n8n.ticketz.pro",
+            "x-forwarded-proto": "https",
+            "x-forwarded-ssl": "on",
+            "x-forwarded-port": "443",
+            "x-original-uri": "/webhook/ticketz-mercadopago/",
+            "content-length": "2364",
+            "accept": "application/json, text/plain, */*",
+            "content-type": "application/json",
+            "authorization": "Bearer teste",
+            "user-agent": "axios/1.16.1",
+            "accept-encoding": "gzip, compress, deflate, br"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "operation": "webhook",
+            "driver": "external",
+            "callbackUrl": "https://abe2-2804-14d-ba55-818e-9bb6-d84d-b611-e277.ngrok-free.app/subscription/webhook",
+            "webhookBody": {
+              "action": "order.canceled",
+              "api_version": "v1",
+              "application_id": "298685189685944",
+              "data": {
+                "currency_id": "BRL",
+                "external_reference": "Invoice13",
+                "id": "ORD01KVX0MCVJZT41ST5VYRA7TBTX",
+                "status": "canceled",
+                "status_detail": "expired",
+                "total_amount": "5.04",
+                "total_paid_amount": "5.04",
+                "transactions": {
+                  "payments": [
+                    {
+                      "amount": "5.04",
+                      "id": "PAY01KVX0MCVW8XQFCA2PKQQTAW0Y",
+                      "payment_method": {
+                        "id": "pix",
+                        "installments": 0,
+                        "type": "bank_transfer"
+                      },
+                      "reference": {
+                        "id": "000d024l11"
+                      },
+                      "status": "expired",
+                      "status_detail": "expired"
+                    }
+                  ]
+                },
+                "type": "online",
+                "version": 2
+              },
+              "date_created": "2026-06-24T14:50:13.943370216Z",
+              "live_mode": true,
+              "type": "order",
+              "user_id": "143677869"
+            },
+            "webhookHeaders": {
+              "host": "abe2-2804-14d-ba55-818e-9bb6-d84d-b611-e277.ngrok-free.app",
+              "user-agent": "n8n",
+              "content-length": "637",
+              "accept": "application/json,text/html,application/xhtml+xml,application/xml,text/*;q=0.9, image/*;q=0.8, */*;q=0.7",
+              "accept-encoding": "gzip, compress, deflate, br",
+              "content-type": "application/json",
+              "x-forwarded-for": "144.22.131.252",
+              "x-forwarded-host": "abe2-2804-14d-ba55-818e-9bb6-d84d-b611-e277.ngrok-free.app",
+              "x-forwarded-proto": "https",
+              "x-request-id": "2b13e565-fb05-4b8a-83e9-b57aa684fdbf",
+              "x-signature": "ts=1782312615,v1=0c853e7faa1a1a70c127a897341aa0736aa9739a9405790c9d4916fc327ee489"
+            },
+            "webhookQuery": {
+              "data.external_reference": "Invoice13",
+              "data.id": "ORD01KVX0MCVJZT41ST5VYRA7TBTX",
+              "type": "order"
+            },
+            "currentSettings": {
+              "_externalSectionEndpoint": null,
+              "_externalEndpointUrl": "https://n8n.ticketz.pro/webhook/ticketz-mercadopago",
+              "_externalAuthToken": "teste",
+              "_externalDynamicFieldsTrigger": null,
+              "_externalmercadoPago_accessToken": "APP_USR-298685189685944-061814-ce6293ca72782fab2081771655aeece3-143677869",
+              "_externalmercadoPago_pixExpiryMinutes": null,
+              "_externalmercadoPago_sandbox": null,
+              "_externalmercadoPago_pixExpiryMinuts": "",
+              "_externalAuthHeaderName": "",
+              "_externalTimeout": "",
+              "_externalRetryAttempts": "",
+              "_externalWebhookPath": "",
+              "_externalCertFile": "",
+              "_externalDisableCc": "",
+              "_externalDisableLink": "",
+              "_externalSectionPaymentModes": "",
+              "_externalEnableSubscriptions": "",
+              "_externalDisableBoleto": "",
+              "_externalSectionSubscription": "",
+              "_externalDisablePix": ""
+            },
+            "fileData": {},
+            "idempotencyKey": "b6efdfab-9914-4561-a8d5-cd35a6f7e2cf"
+          },
+          "webhookUrl": "https://n8n.ticketz.pro/webhook/ticketz-mercadopago",
+          "executionMode": "production"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ]
+  },
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Auth Token",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Auth OK?": {
+      "main": [
+        [
+          {
+            "node": "Read Operation",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Reject Auth",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Operation": {
+      "main": [
+        [
+          {
+            "node": "Has Operation?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Has Operation?": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Reject Missing Op",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Build Cache Key",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Switch2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "consulta pagamento",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Config options for Mercadopago",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Reject Unknown Op",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Cache Key": {
+      "main": [
+        [
+          {
+            "node": "get-create-cache",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Cache Exists?": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Switch1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Auth Token": {
+      "main": [
+        [
+          {
+            "node": "Auth OK?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get-create-cache": {
+      "main": [
+        [
+          {
+            "node": "Cache Exists?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch1": {
+      "main": [
+        [
+          {
+            "node": "emite boleto",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "emite pix",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "emite boleto": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code in JavaScript3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Redis": {
+      "main": [
+        [
+          {
+            "node": "Respond to Ticketz2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Redis",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript1": {
+      "main": [
+        [
+          {
+            "node": "Respond to Ticketz2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "emite pix": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript2": {
+      "main": [
+        [
+          {
+            "node": "Redis",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript3": {
+      "main": [
+        [
+          {
+            "node": "Redis",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "consulta pagamento": {
+      "main": [
+        [
+          {
+            "node": "Respond to Ticketz",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch2": {
+      "main": [
+        [
+          {
+            "node": "cancela cobrança",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "retorna pagamento",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "ignora",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false,
+    "timeSavedMode": "fixed",
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "versionId": "deaf1e08-5d0b-43d7-bf20-9398d6548834",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "bcd2aa20555003a2d933360c8360a2c0aa0db37d85c83d3ac93d40d774715b9e"
+  },
+  "nodeGroups": [],
+  "id": "77UdSoBisbQzv6Pw",
+  "tags": []
+}
