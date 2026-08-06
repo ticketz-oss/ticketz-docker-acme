@@ -213,30 +213,14 @@ ensure_migrations_available() {
 
   mkdir -p migrations
 
-  # Tenta obter a pasta migrations do repositório remoto.
-  # Primeiro tenta origin/main; se não encontrar, tenta a branch atual.
+  # Tenta obter a pasta migrations sempre da branch main do repositório remoto.
   # Usa git archive para baixar apenas a pasta sem alterar o HEAD ou o
   # working tree local, funcionando mesmo quando há alterações locais.
   if [ -d .git ]; then
-    current_branch=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || true)
-
-    _fetch_migrations_from_ref() {
-      local ref="$1"
-      git fetch origin "${ref}" --no-tags &>/dev/null || true
-      if git rev-parse --verify -- "origin/${ref}" &>/dev/null; then
-        echo "Atualizando scripts de migração de origin/${ref}"
-        if git archive "origin/${ref}" -- migrations/ 2>/dev/null | tar -x -C . 2>/dev/null; then
-          echo "Scripts de migração atualizados"
-          return 0
-        fi
-      fi
-      return 1
-    }
-
-    if ! _fetch_migrations_from_ref main; then
-      if [ -n "${current_branch}" ]; then
-        _fetch_migrations_from_ref "${current_branch}" || true
-      fi
+    git fetch origin main --no-tags &>/dev/null || true
+    if git rev-parse --verify -- origin/main &>/dev/null; then
+      echo "Atualizando scripts de migração de origin/main"
+      git archive origin/main -- migrations/ 2>/dev/null | tar -x -C . 2>/dev/null || true
     fi
   fi
 
