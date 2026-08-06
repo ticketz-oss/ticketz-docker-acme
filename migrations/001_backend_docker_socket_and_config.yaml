@@ -1,0 +1,13 @@
+description: Adiciona docker.sock e configuração do Docker ao serviço backend
+check:
+  services:
+    backend:
+      volumes:
+        - contains: "/var/run/docker.sock:/var/run/docker.sock"
+        - contains: "~/.docker/config.json:/root/.docker/config.json"
+apply:
+  services:
+    backend:
+      volumes:
+        - "/var/run/docker.sock:/var/run/docker.sock:ro"
+        - "~/.docker/config.json:/root/.docker/config.json:ro"
