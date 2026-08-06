@@ -208,8 +208,64 @@ ensure_tzautoinstaller_env() {
   fi
 }
 
+ensure_migrations_available() {
+  local current_branch
+
+  mkdir -p migrations
+
+  # Tenta obter a pasta migrations mais recente do repositório remoto.
+  # Usa git archive para baixar apenas a pasta sem alterar o HEAD ou o
+  # working tree local, funcionando mesmo quando há alterações locais.
+  if [ -d .git ]; then
+    current_branch=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || true)
+    if [ -n "${current_branch}" ]; then
+      git fetch origin "${current_branch}" --no-tags &>/dev/null || true
+      if git rev-parse --verify -- "origin/${current_branch}" &>/dev/null; then
+        echo "Atualizando scripts de migração"
+        if git archive "origin/${current_branch}" -- migrations/ 2>/dev/null | tar -x -C . 2>/dev/null; then
+          echo "Scripts de migração atualizados"
+        fi
+      fi
+    fi
+  fi
+
+  if ! [ -f migrations/run.py ]; then
+    echo "Não foi possível obter migrations/run.py"
+    echo "Verifique a conexão com a internet ou o acesso ao repositório."
+    exit 1
+  fi
+
+  # Fallback: cria a migração inicial localmente caso não esteja no repositório.
+  if ! [ -f migrations/001_backend_docker_socket_and_config.yaml ]; then
+    echo "Criando migração inicial localmente"
+    cat > migrations/001_backend_docker_socket_and_config.yaml <<'YAMLEOF'
+description: Adiciona docker.sock e configuração do Docker ao serviço backend
+check:
+  services:
+    backend:
+      volumes:
+        - contains: "/var/run/docker.sock:/var/run/docker.sock"
+        - contains: "~/.docker/config.json:/root/.docker/config.json"
+apply:
+  services:
+    backend:
+      volumes:
+        - "/var/run/docker.sock:/var/run/docker.sock:ro"
+        - "~/.docker/config.json:/root/.docker/config.json:ro"
+YAMLEOF
+  fi
+}
+
 ensure_tzautoinstaller_env .env-backend
 ensure_tzautoinstaller_env .env-frontend
+
+# Executa migrações para garantir que novos requisitos de configuração
+# estejam presentes no docker-compose.override.yaml, mesmo quando
+# alterações locais impedem o git pull.
+ensure_migrations_available
+
+echo "Verificando migrações do docker-compose"
+python3 migrations/run.py --project-dir . || show_error "Erro ao executar migrações do docker-compose"
 
 echo "Baixando novas imagens"
 ensure_docker_config
