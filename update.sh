@@ -152,7 +152,123 @@ else
   sleep 20
 fi
 
+# Garante que o userland-proxy do Docker está desabilitado
+# Sem isso, o docker-proxy mascara o IP real do cliente nos logs do nginx
+ensure_docker_no_userland_proxy() {
+  local cfg=/etc/docker/daemon.json
+  local needs_restart=0
+
+  if [ ! -f "$cfg" ]; then
+    echo '{"userland-proxy": false}' > "$cfg"
+    needs_restart=1
+  elif ! python3 -c "import json,sys; d=json.load(open('$cfg')); sys.exit(0 if d.get('userland-proxy') is False else 1)" 2>/dev/null; then
+    python3 - <<'PYEOF'
+import json
+cfg = '/etc/docker/daemon.json'
+try:
+    d = json.load(open(cfg))
+except Exception:
+    d = {}
+d['userland-proxy'] = False
+open(cfg, 'w').write(json.dumps(d, indent=2) + '\n')
+PYEOF
+    needs_restart=1
+  fi
+
+  if [ "$needs_restart" = "1" ]; then
+    echo "Configurando Docker para uso de iptables puro (sem userland-proxy)..."
+    systemctl restart docker
+    echo "Docker reiniciado."
+  fi
+}
+ensure_docker_no_userland_proxy
+
+# Garante que o arquivo de configuração do Docker exista
+ensure_docker_config() {
+  local cfg="$HOME/.docker/config.json"
+
+  if [ ! -f "$cfg" ]; then
+    mkdir -p "$(dirname "$cfg")"
+    echo '{}' > "$cfg"
+  fi
+}
+
+# Garante que os arquivos .env tenham TZAUTOINSTALLER=1
+ensure_tzautoinstaller_env() {
+  local env_file="$1"
+
+  if [ ! -f "$env_file" ]; then
+    return 0
+  fi
+
+  if grep -qE '^TZAUTOINSTALLER=' "$env_file"; then
+    sed -i 's/^TZAUTOINSTALLER=.*/TZAUTOINSTALLER=1/' "$env_file"
+  else
+    echo 'TZAUTOINSTALLER=1' >> "$env_file"
+  fi
+}
+
+ensure_migrations_available() {
+  local current_branch
+
+  mkdir -p migrations
+
+  # Tenta obter a pasta migrations mais recente do repositório remoto.
+  # Usa git archive para baixar apenas a pasta sem alterar o HEAD ou o
+  # working tree local, funcionando mesmo quando há alterações locais.
+  if [ -d .git ]; then
+    current_branch=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || true)
+    if [ -n "${current_branch}" ]; then
+      git fetch origin "${current_branch}" --no-tags &>/dev/null || true
+      if git rev-parse --verify -- "origin/${current_branch}" &>/dev/null; then
+        echo "Atualizando scripts de migração"
+        if git archive "origin/${current_branch}" -- migrations/ 2>/dev/null | tar -x -C . 2>/dev/null; then
+          echo "Scripts de migração atualizados"
+        fi
+      fi
+    fi
+  fi
+
+  if ! [ -f migrations/run.py ]; then
+    echo "Não foi possível obter migrations/run.py"
+    echo "Verifique a conexão com a internet ou o acesso ao repositório."
+    exit 1
+  fi
+
+  # Fallback: cria a migração inicial localmente caso não esteja no repositório.
+  if ! [ -f migrations/001_backend_docker_socket_and_config.yaml ]; then
+    echo "Criando migração inicial localmente"
+    cat > migrations/001_backend_docker_socket_and_config.yaml <<'YAMLEOF'
+description: Adiciona docker.sock e configuração do Docker ao serviço backend
+check:
+  services:
+    backend:
+      volumes:
+        - contains: "/var/run/docker.sock:/var/run/docker.sock"
+        - contains: "~/.docker/config.json:/root/.docker/config.json"
+apply:
+  services:
+    backend:
+      volumes:
+        - "/var/run/docker.sock:/var/run/docker.sock:ro"
+        - "~/.docker/config.json:/root/.docker/config.json:ro"
+YAMLEOF
+  fi
+}
+
+ensure_tzautoinstaller_env .env-backend
+ensure_tzautoinstaller_env .env-frontend
+
+# Executa migrações para garantir que novos requisitos de configuração
+# estejam presentes no docker-compose.override.yaml, mesmo quando
+# alterações locais impedem o git pull.
+ensure_migrations_available
+
+echo "Verificando migrações do docker-compose"
+python3 migrations/run.py --project-dir . || show_error "Erro ao executar migrações do docker-compose"
+
 echo "Baixando novas imagens"
+ensure_docker_config
 docker compose pull || show_error "Erro ao baixar novas imagens"
 
 echo "Finalizando containers"
