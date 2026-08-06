@@ -214,13 +214,14 @@ ensure_migrations_available() {
   mkdir -p migrations
 
   # Tenta obter a pasta migrations sempre da branch main do repositório remoto.
-  # Usa git archive para baixar apenas a pasta sem alterar o HEAD ou o
-  # working tree local, funcionando mesmo quando há alterações locais.
+  # Usa git fetch + FETCH_HEAD para funcionar mesmo em clones single-branch
+  # onde origin/main não existe. git archive extrai apenas a pasta migrations
+  # sem alterar o HEAD ou o working tree local.
   if [ -d .git ]; then
-    git fetch origin main --no-tags &>/dev/null || true
-    if git rev-parse --verify -- origin/main &>/dev/null; then
-      echo "Atualizando scripts de migração de origin/main"
-      git archive origin/main -- migrations/ 2>/dev/null | tar -x -C . 2>/dev/null || true
+    if git fetch origin main --no-tags &>/dev/null; then
+      if git archive FETCH_HEAD -- migrations/ 2>/dev/null | tar -x -C . 2>/dev/null; then
+        echo "Scripts de migração atualizados"
+      fi
     fi
   fi
 
