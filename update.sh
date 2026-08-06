@@ -183,6 +183,16 @@ PYEOF
 }
 ensure_docker_no_userland_proxy
 
+# Garante que o arquivo de configuração do Docker exista
+ensure_docker_config() {
+  local cfg="$HOME/.docker/config.json"
+
+  if [ ! -f "$cfg" ]; then
+    mkdir -p "$(dirname "$cfg")"
+    echo '{}' > "$cfg"
+  fi
+}
+
 # Garante que os arquivos .env tenham TZAUTOINSTALLER=1
 ensure_tzautoinstaller_env() {
   local env_file="$1"
@@ -202,6 +212,7 @@ ensure_tzautoinstaller_env .env-backend
 ensure_tzautoinstaller_env .env-frontend
 
 echo "Baixando novas imagens"
+ensure_docker_config
 docker compose pull || show_error "Erro ao baixar novas imagens"
 
 echo "Finalizando containers"

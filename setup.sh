@@ -143,6 +143,16 @@ PYEOF
 }
 ensure_docker_no_userland_proxy
 
+# Garante que o arquivo de configuração do Docker exista
+ensure_docker_config() {
+  local cfg="$HOME/.docker/config.json"
+
+  if [ ! -f "$cfg" ]; then
+    mkdir -p "$(dirname "$cfg")"
+    echo '{}' > "$cfg"
+  fi
+}
+
 # Passo 3: Baixa o projeto e entra na pasta
 [ -d ticketz-docker-acme ] || git clone https://github.com/ticketz-oss/ticketz-docker-acme.git
 cd ticketz-docker-acme
@@ -205,6 +215,7 @@ EOF
 DIDRESTORE=""
 
 ## baixa todos os componentes
+ensure_docker_config
 docker compose pull
 
 if [ -f ${CURFOLDER}/retrieved_data.tar.gz ]; then
