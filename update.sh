@@ -183,6 +183,24 @@ PYEOF
 }
 ensure_docker_no_userland_proxy
 
+# Garante que os arquivos .env tenham TZAUTOINSTALLER=1
+ensure_tzautoinstaller_env() {
+  local env_file="$1"
+
+  if [ ! -f "$env_file" ]; then
+    return 0
+  fi
+
+  if grep -qE '^TZAUTOINSTALLER=' "$env_file"; then
+    sed -i 's/^TZAUTOINSTALLER=.*/TZAUTOINSTALLER=1/' "$env_file"
+  else
+    echo 'TZAUTOINSTALLER=1' >> "$env_file"
+  fi
+}
+
+ensure_tzautoinstaller_env .env-backend
+ensure_tzautoinstaller_env .env-frontend
+
 echo "Baixando novas imagens"
 docker compose pull || show_error "Erro ao baixar novas imagens"
 
