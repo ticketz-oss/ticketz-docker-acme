@@ -106,7 +106,55 @@ anterior ou um array com vários objetos de mensagens.
   "message": {
     "type": "text",
     "content": "conteúdo da mensagem"
-  }}}
+  }
+}
+```
+
+### Envio de mensagem com menu de opções
+
+Envia uma mensagem seguida de um menu de opções. O menu será
+renderizado conforme os recursos do canal sendo utilizado e das
+preferências definidas nas configurações.
+
+Para esse tipo de envio o atributo `message` não pode ser um array.
+
+```json
+{
+  "message": {
+    "type": "text",
+    "content": "Uma mensagem"
+  },
+  "action": "menu",
+  "menuOptions": [
+    {
+      "text": "Opção 1"
+    },
+    {
+      "text": "Opção 2"
+    }
+  ]
+}
+```
+
+### Envio de mensagem com botão de URL
+
+Envia uma mensagem com botão de URL, exclusiva para canais que suportam
+esse tipo de mensagem (por enquanto apenas Notificamehub Whatsapp Oficial)
+
+```json
+{
+  "message": {
+    "type": "text",
+    "content": "Clique no botão abaixo para conhecer mais sobre o nosso produto"
+  },
+  "action": "menu",
+  "menuOptions": [
+    {
+      "text": "Ticketz PRO",
+      "url": "https://pro.ticke.tz"
+    }
+  ]
+}
 ```
 
 ### Transferência de Fila
@@ -225,5 +273,76 @@ colocando ele logo antes de um campo texto.
 ```json
 {
   "action": "ping"
+}
+```
+
+### Adicionar uma tag no ticket
+
+Este comando adiciona uma tag no ticket.
+
+O parâmetro `advanceOnly` é opcional, quando definido como verdadeiro ele impede que uma tag de funil substitua uma outra tag do mesmo funil que esteja em nível mais avançado.
+
+```json
+{
+  "action": "addTag",
+  "tagId": <número da tag>,
+  "advanceOnly": true
+}
+```
+
+### Remover uma tag do ticket
+
+Este comando remove uma tag do ticket.
+
+```json
+{
+  "action": "removeTag",
+  "tagId": <número da tag>
+}
+```
+
+### Limpar tags do ticket
+
+Este comando remove todas as tags do ticket (CUIDADO!)
+
+```json
+{
+  "action": "clearTags"
+}
+```
+
+### Adicionar uma tag no contato
+
+Este comando adiciona uma tag no contato.
+
+
+O parâmetro `advanceOnly` é opcional, quando definido como verdadeiro ele impede que uma tag de funil substitua uma outra tag do mesmo funil que esteja em nível mais avançado.
+
+```json
+{
+  "action": "addContactTag",
+  "tagId": <número da tag>,
+  "advanceOnly": true
+}
+```
+
+### Remover uma tag do contato
+
+Este comando remove uma tag do contato.
+
+```json
+{
+  "action": "removeContactTag",
+  "tagId": <número da tag>
+}
+```
+
+### Limpar tags do contato
+
+Este comando remove todas as tags do contato (CUIDADO!)
+
+```json
+{
+  "action": "clearContactTags"
 }
 ```

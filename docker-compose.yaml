@@ -136,7 +136,7 @@ services:
 
 
   minio:
-    image: minio/minio
+    image: quay.io/minio/minio
     command: server /data --console-address ":9001"
     restart: always
     depends_on:
@@ -156,7 +156,7 @@ services:
 
   # This service just makes sure a bucket with the right policies is created
   createbuckets:
-    image: minio/mc
+    image: quay.io/minio/mc
     env_file:
       - .env-integrations
       - .env-secrets
@@ -180,6 +180,7 @@ services:
     depends_on:
       - postgres
       - acme-companion
+      - minio
     extra_hosts:
       - 'host.docker.internal:host-gateway'
     env_file:
@@ -196,6 +197,7 @@ services:
     restart: always
     depends_on:
       - acme-companion
+      - minio
     env_file:
       - .env-integrations
       - .env-secrets
