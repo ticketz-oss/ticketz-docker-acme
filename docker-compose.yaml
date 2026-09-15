@@ -135,7 +135,7 @@ services:
 
 
   minio:
-    image: minio/minio
+    image: quay.io/minio/minio
     command: server /data --console-address ":9001"
     restart: always
     depends_on:
