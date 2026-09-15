@@ -110,6 +110,53 @@ anterior ou um array com vários objetos de mensagens.
 }
 ```
 
+### Envio de mensagem com menu de opções
+
+Envia uma mensagem seguida de um menu de opções. O menu será
+renderizado conforme os recursos do canal sendo utilizado e das
+preferências definidas nas configurações.
+
+Para esse tipo de envio o atributo `message` não pode ser um array.
+
+```json
+{
+  "message": {
+    "type": "text",
+    "content": "Uma mensagem"
+  },
+  "action": "menu",
+  "menuOptions": [
+    {
+      "text": "Opção 1"
+    },
+    {
+      "text": "Opção 2"
+    }
+  ]
+}
+```
+
+### Envio de mensagem com botão de URL
+
+Envia uma mensagem com botão de URL, exclusiva para canais que suportam
+esse tipo de mensagem (por enquanto apenas Notificamehub Whatsapp Oficial)
+
+```json
+{
+  "message": {
+    "type": "text",
+    "content": "Clique no botão abaixo para conhecer mais sobre o nosso produto"
+  },
+  "action": "menu",
+  "menuOptions": [
+    {
+      "text": "Ticketz PRO",
+      "url": "https://pro.ticke.tz"
+    }
+  ]
+}
+```
+
 ### Transferência de Fila
 
 Transfere o ticket para outra fila, caso a nova fila não seja atendida
@@ -233,10 +280,13 @@ colocando ele logo antes de um campo texto.
 
 Este comando adiciona uma tag no ticket.
 
+O parâmetro `advanceOnly` é opcional, quando definido como verdadeiro ele impede que uma tag de funil substitua uma outra tag do mesmo funil que esteja em nível mais avançado.
+
 ```json
 {
   "action": "addTag",
-  "tagId": <número da tag>
+  "tagId": <número da tag>,
+  "advanceOnly": true
 }
 ```
 
@@ -265,10 +315,14 @@ Este comando remove todas as tags do ticket (CUIDADO!)
 
 Este comando adiciona uma tag no contato.
 
+
+O parâmetro `advanceOnly` é opcional, quando definido como verdadeiro ele impede que uma tag de funil substitua uma outra tag do mesmo funil que esteja em nível mais avançado.
+
 ```json
 {
   "action": "addContactTag",
-  "tagId": <número da tag>
+  "tagId": <número da tag>,
+  "advanceOnly": true
 }
 ```
 
