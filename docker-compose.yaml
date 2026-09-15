@@ -155,7 +155,7 @@ services:
 
   # This service just makes sure a bucket with the right policies is created
   createbuckets:
-    image: minio/mc
+    image: quay.io/minio/mc
     env_file:
       - .env-integrations
       - .env-secrets
