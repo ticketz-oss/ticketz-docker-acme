@@ -135,7 +135,7 @@ services:
 
 
   minio:
-    image: quay.io/minio/minio
+    image: pgsty/minio
     command: server /data --console-address ":9001"
     restart: always
     depends_on:
@@ -155,7 +155,7 @@ services:
 
   # This service just makes sure a bucket with the right policies is created
   createbuckets:
-    image: quay.io/minio/mc
+    image: pgsty/mc
     env_file:
       - .env-integrations
       - .env-secrets
