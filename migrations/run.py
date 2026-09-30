@@ -6,6 +6,14 @@ Cada arquivo migrations/###_nome.yaml define uma "parte" de YAML que deve
 estar presente na configuração efetiva. Se o predicado `check` não for
 satisfeito, a parte `apply` é mesclada em docker-compose.override.yaml.
 
+Uma migração pode ser condicional: o bloco opcional `when` restringe a sua
+aplicação. Nele, uma lista representa um OU entre condições e um dicionário
+exige que todos os seus itens sejam atendidos. Quando `when` não é satisfeito
+a migração é ignorada (e não é marcada como aplicada).
+
+Além da comparação por igualdade, os valores podem usar os operadores
+`ne` (diferente, exigindo que o item exista) e `exists` (presença).
+
 O arquivo migrations/.applied guarda os IDs das migrações já executadas.
 """
 
@@ -124,6 +132,28 @@ def _volume_matches(target, candidate):
     return t_parts[0] == c_parts[0] and t_parts[1] == c_parts[1]
 
 
+# Operadores que podem ser usados no lugar de um valor literal em `when`/`check`.
+OPERATORS = ("eq", "ne", "exists")
+
+
+def _is_operator(node):
+    """Indica se `node` é um operador (dicionário de uma chave só)."""
+    return isinstance(node, dict) and len(node) == 1 and next(iter(node)) in OPERATORS
+
+
+def _satisfies_operator(node, actual):
+    """Avalia um nó de operador contra o valor efetivo `actual`."""
+    op, operand = next(iter(node.items()))
+    if op == "eq":
+        return actual == operand
+    if op == "ne":
+        # `actual is not None` garante que o item comparado precise existir.
+        return actual is not None and actual != operand
+    if op == "exists":
+        return (actual is not None) == bool(operand)
+    return False
+
+
 def _contains_predicate(collection, expected):
     """Verifica se `expected` está contido em `collection` usando comparação de volumes quando aplicável."""
     if not isinstance(collection, list):
@@ -138,6 +168,8 @@ def _contains_predicate(collection, expected):
 def check_satisfied(check_tree, config_tree):
     """Verifica se a configuração efetiva satisfaz a árvore de `check`."""
     if isinstance(check_tree, dict):
+        if _is_operator(check_tree):
+            return _satisfies_operator(check_tree, config_tree)
         for key, expected in check_tree.items():
             if key == "contains" and isinstance(expected, str):
                 # O nó pai deve ser uma lista; será tratado em _contains_predicate.
@@ -162,6 +194,18 @@ def check_satisfied(check_tree, config_tree):
         return True
 
     return check_tree == config_tree
+
+
+def when_satisfied(when_tree, config_tree):
+    """Avalia a condição `when` de uma migração condicional.
+
+    Uma lista representa um OU entre suas condições; qualquer outro nó é
+    avaliado como `check_satisfied` (um dicionário exige que todos os seus
+    itens sejam atendidos).
+    """
+    if isinstance(when_tree, list):
+        return any(when_satisfied(item, config_tree) for item in when_tree)
+    return check_satisfied(when_tree, config_tree)
 
 
 def merge(base, override):
@@ -212,12 +256,17 @@ def run_migrations(project_dir, dry_run=False):
             migration = yaml.safe_load(f) or {}
 
         description = migration.get("description", "")
-        check_tree = migration.get("check", {})
+        when_tree = migration.get("when")
+        check_tree = migration.get("check")
         apply_tree = migration.get("apply", {})
 
         config = yaml.safe_load(get_effective_config(project_dir))
 
-        if check_satisfied(check_tree, config):
+        if when_tree is not None and not when_satisfied(when_tree, config):
+            print(f"[{mid}] condição não atendida. Pulando.")
+            continue
+
+        if check_tree is not None and check_satisfied(check_tree, config):
             print(f"[{mid}] não necessária. Marcando como aplicada.")
             applied.add(mid)
             save_applied(applied)
