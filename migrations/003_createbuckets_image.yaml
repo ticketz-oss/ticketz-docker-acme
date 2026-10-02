@@ -1,0 +1,10 @@
+description: Usa a imagem pgsty/mc para o serviço createbuckets
+when:
+  services:
+    createbuckets:
+      image:
+        ne: pgsty/mc
+apply:
+  services:
+    createbuckets:
+      image: pgsty/mc
