@@ -240,20 +240,20 @@ ensure_migrations_available() {
   if [ -d .git ]; then
     if git fetch origin main --no-tags &>/dev/null; then
       if git archive FETCH_HEAD -- migrations/ 2>/dev/null | tar -x -C "${migrations_tmp}" 2>/dev/null; then
-        echo "Scripts de migração atualizados de origin/main"
+        echo "Scripts de migração atualizados de origin/main" >&2
       fi
     fi
   fi
 
   if ! [ -f "${migrations_tmp}/migrations/run.py" ]; then
-    echo "Não foi possível obter migrations/run.py"
-    echo "Verifique a conexão com a internet ou o acesso ao repositório."
+    echo "Não foi possível obter migrations/run.py" >&2
+    echo "Verifique a conexão com a internet ou o acesso ao repositório." >&2
     exit 1
   fi
 
   # Fallback: cria a migração inicial localmente caso não esteja no repositório.
   if ! [ -f "${migrations_tmp}/migrations/001_backend_docker_socket_and_config.yaml" ]; then
-    echo "Criando migração inicial localmente"
+    echo "Criando migração inicial localmente" >&2
     cat > "${migrations_tmp}/migrations/001_backend_docker_socket_and_config.yaml" <<'YAMLEOF'
 description: Adiciona docker.sock e configuração do Docker ao serviço backend
 check:
