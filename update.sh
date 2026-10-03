@@ -209,9 +209,12 @@ ensure_tzautoinstaller_env() {
 }
 
 ensure_migrations_available() {
-  local current_branch
+  local migrations_tmp=".migrations-tmp"
 
-  mkdir -p migrations
+  # Remove qualquer artefato anterior da pasta temporária de migrações
+  # para evitar que arquivos locais interfiram no git pull.
+  rm -rf "${migrations_tmp}"
+  mkdir -p "${migrations_tmp}"
 
   # Tenta obter a pasta migrations sempre da branch main do repositório remoto.
   # Usa git fetch + FETCH_HEAD para funcionar mesmo em clones single-branch
@@ -219,22 +222,22 @@ ensure_migrations_available() {
   # sem alterar o HEAD ou o working tree local.
   if [ -d .git ]; then
     if git fetch origin main --no-tags &>/dev/null; then
-      if git archive FETCH_HEAD -- migrations/ 2>/dev/null | tar -x -C . 2>/dev/null; then
-        echo "Scripts de migração atualizados"
+      if git archive FETCH_HEAD -- migrations/ 2>/dev/null | tar -x -C "${migrations_tmp}" 2>/dev/null; then
+        echo "Scripts de migração atualizados de origin/main"
       fi
     fi
   fi
 
-  if ! [ -f migrations/run.py ]; then
+  if ! [ -f "${migrations_tmp}/migrations/run.py" ]; then
     echo "Não foi possível obter migrations/run.py"
     echo "Verifique a conexão com a internet ou o acesso ao repositório."
     exit 1
   fi
 
   # Fallback: cria a migração inicial localmente caso não esteja no repositório.
-  if ! [ -f migrations/001_backend_docker_socket_and_config.yaml ]; then
+  if ! [ -f "${migrations_tmp}/migrations/001_backend_docker_socket_and_config.yaml" ]; then
     echo "Criando migração inicial localmente"
-    cat > migrations/001_backend_docker_socket_and_config.yaml <<'YAMLEOF'
+    cat > "${migrations_tmp}/migrations/001_backend_docker_socket_and_config.yaml" <<'YAMLEOF'
 description: Adiciona docker.sock e configuração do Docker ao serviço backend
 check:
   services:
@@ -250,6 +253,21 @@ apply:
         - "~/.docker/config.json:/root/.docker/config.json:ro"
 YAMLEOF
   fi
+
+  # Sincroniza a pasta migrations/ local com o commit atual do repositório.
+  # Isso garante que migrations/ reflita o estado do git, mesmo que não seja
+  # usada na execução (que usa .migrations-tmp/).
+  if [ -d .git ]; then
+    if git ls-tree --name-only HEAD migrations/ &>/dev/null; then
+      # migrations/ existe no commit atual, sincroniza
+      git checkout HEAD -- migrations/ &>/dev/null || true
+    else
+      # migrations/ não existe no commit atual, remove se existir localmente
+      rm -rf migrations/
+    fi
+  fi
+
+  echo "${migrations_tmp}"
 }
 
 ensure_tzautoinstaller_env .env-backend
@@ -258,10 +276,13 @@ ensure_tzautoinstaller_env .env-frontend
 # Executa migrações para garantir que novos requisitos de configuração
 # estejam presentes no docker-compose.override.yaml, mesmo quando
 # alterações locais impedem o git pull.
-ensure_migrations_available
+MIGRATIONS_DIR=$(ensure_migrations_available)
 
 echo "Verificando migrações do docker-compose"
-python3 migrations/run.py --project-dir . || show_error "Erro ao executar migrações do docker-compose"
+python3 "${MIGRATIONS_DIR}/migrations/run.py" --project-dir . || show_error "Erro ao executar migrações do docker-compose"
+
+# Limpa a pasta temporária de migrações após a execução
+rm -rf "${MIGRATIONS_DIR}"
 
 echo "Baixando novas imagens"
 ensure_docker_config
