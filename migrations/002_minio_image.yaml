@@ -1,0 +1,10 @@
+description: Usa a imagem pgsty/silo para o serviço minio
+when:
+  services:
+    minio:
+      image:
+        ne: pgsty/silo
+apply:
+  services:
+    minio:
+      image: pgsty/silo

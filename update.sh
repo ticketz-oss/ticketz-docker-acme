@@ -131,25 +131,42 @@ if [ -n "${BRANCH}" ] ; then
   fi
 fi
 
+# Sincroniza a pasta migrations/ com o commit atual antes do git diff.
+# Isso evita que artefatos de execuções anteriores sejam detectados como
+# alterações locais e impeçam o git pull.
+if [ -d .git ]; then
+  if git ls-tree --name-only HEAD migrations/ &>/dev/null; then
+    git checkout HEAD -- migrations/ &>/dev/null || true
+  else
+    rm -rf migrations/
+  fi
+fi
+
 if git diff --quiet; then
   echo "Trazendo updates da branch ${BRANCH}"
   git pull &> /dev/null
 else
-  echored "                                               "
-  echored "  A T E N Ç Ã O                                "
-  echored "                                               "
-  echored "  Você tem alterações locais, isso impede a    "
-  echored "  obtenção de atualizações do repositório da   "
-  echored "  stack.                                       "
-  echored "                                               "
-  echored "  É aconselhado reverter para voltar a seguir  "
-  echored "  as configurações publicadas no projeto.      "
-  echored "                                               "
-  echored "  Aguarde 20 segundos para prosseguir...       "
-  echored "                                               "
-  echored "  ...ou Aperte CTRL-C para cancelar            "
-  echored "                                               "
-  sleep 20
+  # Verifica se as alterações locais conflitam com o que virá do git pull.
+  # Se não houver conflito, o pull pode prosseguir mesmo com alterações locais.
+  if git merge-tree "$(git merge-base HEAD origin/${BRANCH:-main})" HEAD "origin/${BRANCH:-main}" 2>/dev/null | grep -q "^+<<<<<<<"; then
+    echored "                                               "
+    echored "  A T E N Ç Ã O                                "
+    echored "                                               "
+    echored "  Você tem alterações locais que CONFLITAM     "
+    echored "  com as atualizações do repositório.          "
+    echored "                                               "
+    echored "  É aconselhado reverter para voltar a seguir  "
+    echored "  as configurações publicadas no projeto.      "
+    echored "                                               "
+    echored "  Aguarde 20 segundos para prosseguir...       "
+    echored "                                               "
+    echored "  ...ou Aperte CTRL-C para cancelar            "
+    echored "                                               "
+    sleep 20
+  else
+    echo "Alterações locais detectadas, mas sem conflito. Prosseguindo com git pull..."
+    git pull &> /dev/null
+  fi
 fi
 
 # Garante que o userland-proxy do Docker está desabilitado
@@ -209,9 +226,12 @@ ensure_tzautoinstaller_env() {
 }
 
 ensure_migrations_available() {
-  local current_branch
+  local migrations_tmp=".migrations-tmp"
 
-  mkdir -p migrations
+  # Remove qualquer artefato anterior da pasta temporária de migrações
+  # para evitar que arquivos locais interfiram no git pull.
+  rm -rf "${migrations_tmp}"
+  mkdir -p "${migrations_tmp}"
 
   # Tenta obter a pasta migrations sempre da branch main do repositório remoto.
   # Usa git fetch + FETCH_HEAD para funcionar mesmo em clones single-branch
@@ -219,22 +239,22 @@ ensure_migrations_available() {
   # sem alterar o HEAD ou o working tree local.
   if [ -d .git ]; then
     if git fetch origin main --no-tags &>/dev/null; then
-      if git archive FETCH_HEAD -- migrations/ 2>/dev/null | tar -x -C . 2>/dev/null; then
-        echo "Scripts de migração atualizados"
+      if git archive FETCH_HEAD -- migrations/ 2>/dev/null | tar -x -C "${migrations_tmp}" 2>/dev/null; then
+        echo "Scripts de migração atualizados de origin/main" >&2
       fi
     fi
   fi
 
-  if ! [ -f migrations/run.py ]; then
-    echo "Não foi possível obter migrations/run.py"
-    echo "Verifique a conexão com a internet ou o acesso ao repositório."
+  if ! [ -f "${migrations_tmp}/migrations/run.py" ]; then
+    echo "Não foi possível obter migrations/run.py" >&2
+    echo "Verifique a conexão com a internet ou o acesso ao repositório." >&2
     exit 1
   fi
 
   # Fallback: cria a migração inicial localmente caso não esteja no repositório.
-  if ! [ -f migrations/001_backend_docker_socket_and_config.yaml ]; then
-    echo "Criando migração inicial localmente"
-    cat > migrations/001_backend_docker_socket_and_config.yaml <<'YAMLEOF'
+  if ! [ -f "${migrations_tmp}/migrations/001_backend_docker_socket_and_config.yaml" ]; then
+    echo "Criando migração inicial localmente" >&2
+    cat > "${migrations_tmp}/migrations/001_backend_docker_socket_and_config.yaml" <<'YAMLEOF'
 description: Adiciona docker.sock e configuração do Docker ao serviço backend
 check:
   services:
@@ -250,6 +270,11 @@ apply:
         - "~/.docker/config.json:/root/.docker/config.json:ro"
 YAMLEOF
   fi
+
+  # A pasta migrations/ já foi sincronizada com o commit atual antes do
+  # git diff, então não precisa ser sincronizada novamente aqui.
+
+  echo "${migrations_tmp}"
 }
 
 ensure_tzautoinstaller_env .env-backend
@@ -258,10 +283,13 @@ ensure_tzautoinstaller_env .env-frontend
 # Executa migrações para garantir que novos requisitos de configuração
 # estejam presentes no docker-compose.override.yaml, mesmo quando
 # alterações locais impedem o git pull.
-ensure_migrations_available
+MIGRATIONS_DIR=$(ensure_migrations_available)
 
 echo "Verificando migrações do docker-compose"
-python3 migrations/run.py --project-dir . || show_error "Erro ao executar migrações do docker-compose"
+python3 "${MIGRATIONS_DIR}/migrations/run.py" --project-dir . || show_error "Erro ao executar migrações do docker-compose"
+
+# Limpa a pasta temporária de migrações após a execução
+rm -rf "${MIGRATIONS_DIR}"
 
 echo "Baixando novas imagens"
 ensure_docker_config
