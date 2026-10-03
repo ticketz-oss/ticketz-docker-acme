@@ -1,3 +1,4 @@
 /.project
 migrations/.applied
-
+migrations/__pycache__/
+.migrations-tmp/
