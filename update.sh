@@ -131,25 +131,42 @@ if [ -n "${BRANCH}" ] ; then
   fi
 fi
 
+# Sincroniza a pasta migrations/ com o commit atual antes do git diff.
+# Isso evita que artefatos de execuções anteriores sejam detectados como
+# alterações locais e impeçam o git pull.
+if [ -d .git ]; then
+  if git ls-tree --name-only HEAD migrations/ &>/dev/null; then
+    git checkout HEAD -- migrations/ &>/dev/null || true
+  else
+    rm -rf migrations/
+  fi
+fi
+
 if git diff --quiet; then
   echo "Trazendo updates da branch ${BRANCH}"
   git pull &> /dev/null
 else
-  echored "                                               "
-  echored "  A T E N Ç Ã O                                "
-  echored "                                               "
-  echored "  Você tem alterações locais, isso impede a    "
-  echored "  obtenção de atualizações do repositório da   "
-  echored "  stack.                                       "
-  echored "                                               "
-  echored "  É aconselhado reverter para voltar a seguir  "
-  echored "  as configurações publicadas no projeto.      "
-  echored "                                               "
-  echored "  Aguarde 20 segundos para prosseguir...       "
-  echored "                                               "
-  echored "  ...ou Aperte CTRL-C para cancelar            "
-  echored "                                               "
-  sleep 20
+  # Verifica se as alterações locais conflitam com o que virá do git pull.
+  # Se não houver conflito, o pull pode prosseguir mesmo com alterações locais.
+  if git merge-tree "$(git merge-base HEAD origin/${BRANCH:-main})" HEAD "origin/${BRANCH:-main}" 2>/dev/null | grep -q "^+<<<<<<<"; then
+    echored "                                               "
+    echored "  A T E N Ç Ã O                                "
+    echored "                                               "
+    echored "  Você tem alterações locais que CONFLITAM     "
+    echored "  com as atualizações do repositório.          "
+    echored "                                               "
+    echored "  É aconselhado reverter para voltar a seguir  "
+    echored "  as configurações publicadas no projeto.      "
+    echored "                                               "
+    echored "  Aguarde 20 segundos para prosseguir...       "
+    echored "                                               "
+    echored "  ...ou Aperte CTRL-C para cancelar            "
+    echored "                                               "
+    sleep 20
+  else
+    echo "Alterações locais detectadas, mas sem conflito. Prosseguindo com git pull..."
+    git pull &> /dev/null
+  fi
 fi
 
 # Garante que o userland-proxy do Docker está desabilitado
@@ -254,18 +271,8 @@ apply:
 YAMLEOF
   fi
 
-  # Sincroniza a pasta migrations/ local com o commit atual do repositório.
-  # Isso garante que migrations/ reflita o estado do git, mesmo que não seja
-  # usada na execução (que usa .migrations-tmp/).
-  if [ -d .git ]; then
-    if git ls-tree --name-only HEAD migrations/ &>/dev/null; then
-      # migrations/ existe no commit atual, sincroniza
-      git checkout HEAD -- migrations/ &>/dev/null || true
-    else
-      # migrations/ não existe no commit atual, remove se existir localmente
-      rm -rf migrations/
-    fi
-  fi
+  # A pasta migrations/ já foi sincronizada com o commit atual antes do
+  # git diff, então não precisa ser sincronizada novamente aqui.
 
   echo "${migrations_tmp}"
 }
